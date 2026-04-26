@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Viaje Japón">
+<title>Viaje Japón Perfecto</title>
+<style>
+:root{--bg:#0f1115;--card:#1b1f2a;--text:#f5f7fb;--muted:#b6bfd1;--blue:#2b6cff;--ok:#168f5d;--warn:#ff9f1c;--red:#ff4d6d;--line:#30364a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;padding:14px 14px 88px;line-height:1.35}
+h1{font-size:22px;margin:4px 0 10px}
+h2{font-size:18px;margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 6px 20px #0005}
+.critical{border-left:5px solid var(--red)}
+.badge{display:inline-block;background:var(--red);padding:6px 9px;border-radius:10px;font-weight:700;margin-right:7px}
+.badge.soft{background:#333a50}
+.muted{color:var(--muted)}
+.row{padding:8px 0;border-bottom:1px solid var(--line)}
+.time{font-weight:700}
+.btn{display:inline-block;text-decoration:none;color:white;background:var(--blue);padding:11px 12px;border-radius:12px;margin:5px 5px 0 0;font-weight:650;font-size:14px}
+.ok{background:var(--ok)} .warn{background:var(--warn);color:#111} .alt{background:#333a50}
+.rule{background:#28220f;border-left:4px solid var(--warn);padding:10px;border-radius:10px;margin-top:10px;color:#ffe6aa}
+.check li{margin:6px 0;color:var(--muted)}
+.fixed{position:fixed;bottom:0;left:0;right:0;background:#0f1115ed;border-top:1px solid var(--line);padding:10px;display:flex;gap:7px;justify-content:center;backdrop-filter:blur(8px)}
+input{padding:11px;border-radius:10px;border:1px solid var(--line);background:#101722;color:white;width:100%;font-size:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+nav{display:flex;gap:7px;overflow-x:auto;margin:8px 0 14px}
+nav a{text-decoration:none;color:white;background:#2a3041;border:1px solid var(--line);padding:8px 10px;border-radius:999px;white-space:nowrap;font-size:13px}
+</style>
+</head>
+<body>
+<h1>🇯🇵 Viaje Japón Perfecto</h1>
+<nav id="nav"></nav>
+
+<div class="card">
+<h2>🤖 La app decide por ti</h2>
+<div class="rule">🚐 8 maletas = VAN Klook obligatoria. No tren. No taxi estándar.</div>
+<div class="rule">🗻 Fuji: si clima Kawaguchiko está nublado/lluvia a las 05:30, cancela y activa Plan B Shibuya/Ueno.</div>
+<div class="rule">⏰ Si vas tarde: elimina la última actividad del día. No corras.</div>
+<div class="rule">🏯 Kyoto: con equipaje o cansancio usa taxi corto.</div>
+<a class="btn ok" href="https://www.klook.com/airport-transfers/" target="_blank">🚐 Klook Van</a>
+<a class="btn warn" href="https://www.google.com/search?q=clima+kawaguchiko" target="_blank">🗻 Clima Fuji</a>
+<a class="btn" href="https://www.google.com/maps" target="_blank">📍 Maps</a>
+</div>
+
+<div class="card">
+<h2>💴 Control de gastos</h2>
+<div class="grid">
+<div><p class="muted">Gasto hoy ¥</p><input id="gasto" type="number" placeholder="Ej: 8000"></div>
+<div><p class="muted">Total ¥</p><input id="total" readonly></div>
+</div>
+<a class="btn ok" href="#" onclick="sumar();return false;">Sumar</a>
+<a class="btn alt" href="#" onclick="resetear();return false;">Reiniciar</a>
+</div>
+
+<div id="content"></div>
+
+<div class="fixed">
+<a class="btn ok" href="https://www.klook.com/airport-transfers/" target="_blank">🚐 Van</a>
+<a class="btn warn" href="https://www.google.com/search?q=clima+kawaguchiko" target="_blank">🗻 Fuji</a>
+<a class="btn" href="https://www.google.com/maps" target="_blank">📍 Maps</a>
+<a class="btn alt" href="#top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</a>
+</div>
+
+<script>
+const DAYS = [{"label": "15 dic", "title": "Llegada Haneda → Sumida", "critical": true, "plan": [["Noche", "Llegada Haneda"], ["+60/90 min", "Van privada a Airbnb"], ["Final", "Dormir"]], "food": "Konbini o cena ligera cerca del Airbnb. No salir lejos.", "cost": "Van ¥16.000–¥23.000 total.", "links": [["🚐 Klook Van", "https://www.klook.com/airport-transfers/"], ["📍 Haneda", "https://www.google.com/maps/search/Haneda+Airport"], ["📍 Sumida", "https://www.google.com/maps/search/Sumida+Tokyo"]], "checks": ["Pasaportes", "8 maletas completas", "Van Klook confirmada", "eSIM/WiFi activo", "Dirección Airbnb copiada"]}, {"label": "16 dic", "title": "Senso-ji + Ueno Zoo + Ameyoko", "critical": false, "plan": [["09:30", "Salir Airbnb"], ["10:00", "Senso-ji"], ["12:00", "Metro a Ueno"], ["13:00", "Ueno Zoo"], ["15:45", "Ameyoko"], ["18:30", "Regreso"]], "food": "Almuerzo: Ichiran/Ueno o street food en Ameyoko. Cena: Ameyoko o ramen simple.", "cost": "Transporte ¥500–¥900 p/p · Zoo ¥600 · comida ¥4.000–¥6.000 p/p.", "links": [["📍 Ruta día", "https://www.google.com/maps/dir/Asakusa+Station/Ueno+Zoo/Ameyoko+Market"], ["🏯 Senso-ji", "https://www.google.com/maps/search/Senso-ji+Tokyo"], ["🐼 Ueno Zoo", "https://www.google.com/maps/search/Ueno+Zoo"], ["🍜 Ichiran Ueno", "https://www.google.com/maps/search/Ichiran+Ueno"]], "checks": ["IC card con saldo", "Power bank", "Efectivo ¥5.000", "Zapatos cómodos"]}, {"label": "17 dic", "title": "Tokyo → Takaragawa Onsen", "critical": true, "plan": [["07:45", "Salir Airbnb"], ["08:30", "Tokyo Station"], ["09:00–09:20", "Joetsu Shinkansen"], ["10:30", "Jomo-Kogen"], ["11:00–12:00", "Shuttle"], ["14:00", "Check-in"]], "food": "Desayuno konbini antes del tren. Cena ryokan incluida si reservaste plan con comida.", "cost": "Shinkansen ¥5.500–¥6.500 p/p · hotel según reserva.", "links": [["📍 Tokyo Station", "https://www.google.com/maps/search/Tokyo+Station"], ["📍 Jomo-Kogen", "https://www.google.com/maps/search/Jomo-Kogen+Station"], ["♨️ Takaragawa", "https://www.google.com/maps/search/Takaragawa+Onsen+Osenkaku"]], "checks": ["Shuttle confirmado", "Morral listo", "Reserva onsen descargada", "No llevar maletas grandes"]}, {"label": "18 dic", "title": "Takaragawa Onsen", "critical": false, "plan": [["08:00", "Desayuno"], ["09:30", "Onsen exterior"], ["12:00", "Descanso"], ["15:00", "Onsen/fotos"], ["18:00", "Cena"], ["20:00", "Onsen nocturno"]], "food": "Comida incluida parcialmente; llevar snacks. No salir del ryokan a buscar restaurantes.", "cost": "Snacks/almuerzo ¥1.000–¥2.500 p/p.", "links": [["♨️ Takaragawa", "https://www.google.com/maps/search/Takaragawa+Onsen+Osenkaku"]], "checks": ["Hidratarse", "No planear excursiones", "Dormir temprano"]}, {"label": "19 dic", "title": "Regreso Tokyo", "critical": false, "plan": [["08:00", "Desayuno"], ["10:00", "Check-out"], ["10:30", "Shuttle"], ["12:30", "Shinkansen"], ["14:00", "Tokyo"], ["Tarde", "Lavandería/descanso"]], "food": "Almuerzo estación o ekiben. Cena cerca del Airbnb.", "cost": "Shinkansen ¥5.500–¥6.500 p/p · comida ¥4.000–¥6.000 p/p.", "links": [["📍 Jomo-Kogen", "https://www.google.com/maps/search/Jomo-Kogen+Station"]], "checks": ["Confirmar shuttle", "Revisar habitación", "Tickets listos"]}, {"label": "20 dic", "title": "Gotokuji + Nezu + Yanaka", "critical": false, "plan": [["08:30", "Salir"], ["10:00", "Gotokuji"], ["12:30", "Almuerzo"], ["14:00", "Nezu Shrine"], ["15:30", "Yanaka"], ["17:30", "Regreso"]], "food": "Almuerzo local tipo teishoku/ramen. Café en Yanaka si hay energía.", "cost": "Transporte ¥900–¥1.400 p/p · comida ¥4.000–¥6.000 p/p.", "links": [["🐱 Gotokuji", "https://www.google.com/maps/search/Gotokuji+Temple"], ["⛩️ Nezu Shrine", "https://www.google.com/maps/search/Nezu+Shrine"], ["📍 Yanaka", "https://www.google.com/maps/search/Yanaka+Ginza"]], "checks": ["Saldo IC", "Zapatos cómodos", "Si cansancio: saltar Yanaka"]}, {"label": "21 dic", "title": "FUJI: Chureito + secretos", "critical": true, "plan": [["05:30", "Revisar clima"], ["05:45", "Salir Airbnb"], ["07:30", "Fuji Excursion"], ["10:00", "Chureito"], ["11:45", "Momiji Tunnel"], ["12:30", "Lago/Nagasaki"], ["14:00", "Oishi Park"], ["15:30", "Tenku opcional"], ["16:30", "Regreso"]], "food": "Comprar desayuno en konbini. Almuerzo rápido cerca de Kawaguchiko/Oishi; si Fuji está despejado, fotos antes que comida.", "cost": "Fuji Excursion ¥8.400 i/v p/p · local ¥1.000–¥2.000 · comida ¥4.000–¥6.000.", "links": [["🗻 Ruta Fuji", "https://www.google.com/maps/dir/Shinjuku+Station/Kawaguchiko+Station/Arakurayama+Sengen+Park/Lake+Kawaguchi/Oishi+Park/Kawaguchiko+Station/Shinjuku+Station"], ["🌦️ Clima Fuji", "https://www.google.com/search?q=clima+kawaguchiko"], ["🌧️ JMA radar", "https://www.jma.go.jp/bosai/nowc/"], ["🚆 Fuji Excursion", "https://www.jreast.co.jp/multi/en/pass/limitedexpress_fuji.html"]], "checks": ["Si nublado: cancelar Fuji", "Tickets Fuji listos", "Power bank", "Si lago sin viento: quedarse más"]}, {"label": "22 dic", "title": "DisneySea", "critical": true, "plan": [["06:30", "Salir"], ["07:30", "Maihama"], ["09:00–21:00", "DisneySea"], ["21:30", "Regreso"]], "food": "Comer dentro del parque. No salir a buscar restaurantes.", "cost": "Entrada ¥7.900–¥10.900 p/p · comida ¥4.000–¥7.000 · transporte ¥800–¥1.300.", "links": [["🎢 DisneySea", "https://www.google.com/maps/search/Tokyo+DisneySea"], ["🎟️ Tickets Disney", "https://www.tokyodisneyresort.jp/en/ticket/"]], "checks": ["Ticket digital", "App Disney", "Power bank", "No plan adicional"]}, {"label": "23 dic", "title": "Sailor Moon + Godzilla", "critical": false, "plan": [["10:00", "Salir"], ["10:30", "Azabu-Juban"], ["12:30", "Almuerzo"], ["15:30", "Godzilla/Shinjuku"], ["18:00", "Cena"]], "food": "Almuerzo en Azabu. Cena en Omoide Yokocho o ramen en Shinjuku.", "cost": "Transporte ¥800–¥1.500 p/p · comida ¥5.000–¥8.000.", "links": [["🌙 Azabu-Juban", "https://www.google.com/maps/search/Azabu-Juban+Tokyo"], ["🦖 Godzilla", "https://www.google.com/maps/search/Godzilla+Head+Shinjuku"], ["🍢 Omoide Yokocho", "https://www.google.com/maps/search/Omoide+Yokocho"]], "checks": ["Fotos Sailor Moon", "Ruta nocturna clara", "Cena cerca de estación"]}, {"label": "24 dic", "title": "Tokyo → Kyoto + Gion", "critical": true, "plan": [["06:30", "Salir con morral"], ["08:00", "Shinkansen Nozomi"], ["10:30", "Kyoto Station"], ["11:00", "Taxi al Airbnb"], ["17:30", "Caminar a Gion"], ["18:00–20:00", "Gion/Hanamikoji"], ["20:30", "Cena"]], "food": "Cena en Gion/Kawaramachi. Si hay mucha fila, ramen o izakaya cerca.", "cost": "Shinkansen ¥14.000–¥14.500 p/p · taxi ¥1.000–¥1.800 total · comida ¥5.000–¥8.000.", "links": [["🚄 SmartEX", "https://smart-ex.jp/en/"], ["📍 Kyoto Station", "https://www.google.com/maps/search/Kyoto+Station"], ["🏮 Gion", "https://www.google.com/maps/search/Gion+Kyoto"], ["🍜 Ramen Kyoto", "https://www.google.com/maps/search/ramen+Gion+Kyoto"]], "checks": ["Morral únicamente", "Taxi desde Kyoto Station", "Check-in claro", "No fotos invasivas a geishas"]}, {"label": "25 dic", "title": "Fushimi Inari + Otagi + regreso", "critical": true, "plan": [["05:30", "Despertar"], ["05:45", "Salir"], ["06:30–09:30", "Fushimi Inari"], ["10:00", "Café"], ["12:30", "Otagi Nenbutsuji"], ["17:00", "Kyoto Station"], ["18:00", "Shinkansen regreso"]], "food": "Café/desayuno después de Fushimi. Almuerzo simple en Arashiyama o estación.", "cost": "Shinkansen regreso ¥14.000–¥14.500 · transporte Kyoto ¥1.000–¥1.800 · comida ¥5.000–¥8.000.", "links": [["⛩️ Fushimi", "https://www.google.com/maps/dir/Kyoto+Station/Fushimi+Inari+Taisha"], ["🗿 Otagi", "https://www.google.com/maps/search/Otagi+Nenbutsuji"], ["☕ % Arabica", "https://www.google.com/maps/search/%25+Arabica+Kyoto"]], "checks": ["Salir 05:45", "No llegar después de 08:00", "Tickets regreso", "Si cansancio: omitir Adashino"]}, {"label": "26 dic", "title": "Ueno + Samurai Museum", "critical": false, "plan": [["09:30", "Salir"], ["10:00", "Ueno Park"], ["11:00", "Ueno Toshogu"], ["12:00", "Ameyoko"], ["15:30", "Samurai Museum"], ["18:30", "Regreso"]], "food": "Comer en Ameyoko. Café ligero antes del museo.", "cost": "Samurai ¥3.000 p/p · transporte ¥600–¥1.000 · comida ¥4.000–¥6.000.", "links": [["🌳 Ueno Park", "https://www.google.com/maps/search/Ueno+Park"], ["🍢 Ameyoko", "https://www.google.com/maps/search/Ameyoko+Market"], ["🥷 Samurai", "https://samuraininjamuseum.com/"]], "checks": ["Reserva museo", "Efectivo", "Día ligero"]}, {"label": "27 dic", "title": "Sanrio Puroland", "critical": false, "plan": [["08:00", "Salir"], ["09:30", "Tama Center"], ["10:00–16:00", "Sanrio"], ["16:30", "Regreso"], ["19:00", "Cena"]], "food": "Comer dentro de Sanrio. Comprar snacks si hay fila.", "cost": "Entrada ¥3.000–¥5.900 · transporte ¥1.200–¥1.800 · comida ¥4.000–¥6.000.", "links": [["🎀 Sanrio", "https://www.google.com/maps/search/Sanrio+Puroland"], ["🎟️ Tickets Sanrio", "https://en.puroland.jp/"]], "checks": ["Tickets", "Batería", "Souvenirs temprano"]}, {"label": "28 dic", "title": "Shibuya + Tower Records + anime", "critical": false, "plan": [["10:00", "Salir"], ["11:00", "Tower Records"], ["13:00", "Almuerzo"], ["14:00", "Crossing/Hachiko"], ["14:30", "PARCO/Nintendo"], ["16:00", "Pokémon"], ["17:30", "Donki"], ["21:00", "Regreso"]], "food": "Uobei Sushi o ramen rápido. Día de compras = no perder tiempo en restaurante largo.", "cost": "Transporte ¥700–¥1.200 · comida ¥5.000–¥8.000 · compras libre.", "links": [["🎧 Ruta Shibuya", "https://www.google.com/maps/dir/Tower+Records+Shibuya/Shibuya+PARCO/Nintendo+Tokyo/Pokemon+Center+Shibuya"], ["🎵 Tower Records", "https://www.google.com/maps/search/Tower+Records+Shibuya"], ["🍣 Uobei", "https://www.google.com/maps/search/Uobei+Shibuya"], ["🛍️ Donki", "https://www.google.com/maps/search/Don+Quijote+Shibuya"]], "checks": ["Pasaporte tax-free", "Presupuesto compras", "Maletas casi listas", "No meter outlet"]}, {"label": "29 dic", "title": "Salida Haneda", "critical": true, "plan": [["Mañana", "Compras finales cerca"], ["Tarde", "Empaque"], ["-4 h vuelo", "Van a Haneda"], ["Noche", "Vuelo"]], "food": "Comida simple cerca del Airbnb o aeropuerto.", "cost": "Van ¥16.000–¥23.000 total.", "links": [["🚐 Klook Van", "https://www.klook.com/airport-transfers/"], ["✈️ Haneda", "https://www.google.com/maps/search/Haneda+Airport"], ["📍 Asakusa", "https://www.google.com/maps/search/Asakusa+Tokyo"]], "checks": ["Van confirmada", "Pasaportes", "Tickets", "8 maletas revisadas", "Salir 4 h antes"]}];
+const nav=document.getElementById('nav');
+const content=document.getElementById('content');
+DAYS.forEach((d,i)=>{
+  const a=document.createElement('a'); a.href='#d'+i; a.textContent=d.label; nav.appendChild(a);
+  const div=document.createElement('div'); div.className='card '+(d.critical?'critical':''); div.id='d'+i;
+  div.innerHTML = `
+    <h2><span class="badge ${d.critical?'':'soft'}">${d.label}</span>${d.title}</h2>
+    <p class="muted"><b>Costo:</b> ${d.cost}</p>
+    <h3>🧭 Plan</h3>
+    ${d.plan.map(x=>`<div class="row"><span class="time">${x[0]}</span> — ${x[1]}</div>`).join('')}
+    <h3>🍜 Comida</h3><p>${d.food}</p>
+    <h3>✅ Checklist</h3>
+    <ul class="check">${d.checks.map((c,j)=>`<li><input type="checkbox" id="c${i}_${j}" onchange="save('${i}_${j}')"> ${c}</li>`).join('')}</ul>
+    <div>${d.links.map(l=>`<a class="btn" target="_blank" href="${l[1]}">${l[0]}</a>`).join('')}</div>
+  `;
+  content.appendChild(div);
+});
+function save(id){localStorage.setItem('check_'+id,document.getElementById('c'+id).checked?'1':'0')}
+DAYS.forEach((d,i)=>d.checks.forEach((c,j)=>{let el=document.getElementById('c'+i+'_'+j); if(localStorage.getItem('check_'+i+'_'+j)==='1')el.checked=true;}))
+document.getElementById('total').value=localStorage.getItem('gasto_total')||0;
+function sumar(){let v=Number(document.getElementById('gasto').value||0);let t=Number(localStorage.getItem('gasto_total')||0)+v;localStorage.setItem('gasto_total',t);document.getElementById('total').value=t;document.getElementById('gasto').value='';}
+function resetear(){if(confirm('¿Reiniciar gastos?')){localStorage.setItem('gasto_total',0);document.getElementById('total').value=0;}}
+</script>
+</body>
+</html>
