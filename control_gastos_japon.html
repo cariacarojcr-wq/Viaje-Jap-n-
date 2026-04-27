@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Control de Gastos Japón</title>
+<style>
+body{margin:0;background:#0f1115;color:#f5f7fb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;padding:14px 14px 90px;line-height:1.35}
+h1{font-size:22px;margin:4px 0 10px} h2{font-size:18px;margin:0 0 8px}
+.card{background:#1b1f2a;border:1px solid #30364a;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 6px 20px #0005}
+label{display:block;color:#b6bfd1;margin-top:10px;font-size:14px}
+input,select,textarea{width:100%;padding:12px;border-radius:12px;background:#101722;color:white;border:1px solid #30364a;font-size:16px;margin-top:5px}
+textarea{min-height:65px}.btn{display:inline-block;text-decoration:none;color:white;background:#2b6cff;padding:11px 12px;border-radius:12px;margin:7px 5px 0 0;font-weight:650;font-size:14px;border:0}
+.ok{background:#168f5d}.warn{background:#ff9f1c;color:#111}.red{background:#ff4d6d}.alt{background:#333a50}
+.row{display:grid;grid-template-columns:1fr auto;gap:10px;border-bottom:1px solid #30364a;padding:9px 0}.mut{color:#b6bfd1}
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:8px}.kpi div{background:#111722;border:1px solid #30364a;border-radius:12px;padding:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{border-bottom:1px solid #30364a;padding:7px;text-align:left;vertical-align:top}
+.fixed{position:fixed;bottom:0;left:0;right:0;background:#0f1115ed;border-top:1px solid #30364a;padding:10px;display:flex;gap:7px;justify-content:center}
+</style>
+</head>
+<body>
+<h1>💴 Control de Gastos Japón</h1>
+<section class="card">
+<h2>Presupuesto del día</h2>
+<label>Fecha</label><input id="fecha" type="date">
+<label>Presupuesto estimado del día ¥</label><input id="presupuesto" type="number" placeholder="Ej: 12000">
+<div class="kpi" style="margin-top:10px"><div><b>Total gastado</b><br><span id="totalDia">¥0</span></div><div><b>Diferencia</b><br><span id="diferencia">¥0</span></div></div>
+<button class="btn ok" onclick="guardarPresupuesto()">Guardar presupuesto</button>
+</section>
+<section class="card">
+<h2>Registrar gasto</h2>
+<label>Pagado por</label><select id="pagadoPor"><option>Yo</option><option>TC / Tarjeta crédito</option><option>Otra persona</option></select>
+<label>Medio de pago</label><select id="medioPago"><option>Efectivo</option><option>Tarjeta crédito</option><option>Tarjeta débito</option><option>Suica/PASMO</option></select>
+<label>Categoría</label><select id="categoria" onchange="actualizarSubcategoria()"><option>Transporte</option><option>Alimentación</option><option>Entradas turísticas</option><option>Suvenirs</option><option>Compras</option><option>Otros</option></select>
+<label>Subcategoría</label><select id="subcategoria"></select>
+<label>Concepto</label><input id="concepto" type="text" placeholder="Ej: Taxi Lago Kawaguchi a Oishi Park">
+<label>Valor ¥</label><input id="valor" type="number" placeholder="Ej: 2500">
+<label>Notas</label><textarea id="notas" placeholder="Opcional"></textarea>
+<button class="btn ok" onclick="agregarGasto()">Agregar gasto</button><button class="btn alt" onclick="limpiarFormulario()">Limpiar</button>
+</section>
+<section class="card"><h2>Resumen por categoría</h2><div id="resumen"></div></section>
+<section class="card"><h2>Arqueo por medio de pago</h2><div id="arqueo"></div></section>
+<section class="card"><h2>Detalle de gastos</h2><div style="overflow-x:auto"><table><thead><tr><th>Hora</th><th>Pagó</th><th>Medio</th><th>Categoría</th><th>Subcat.</th><th>Concepto</th><th>¥</th><th></th></tr></thead><tbody id="tabla"></tbody></table></div><button class="btn warn" onclick="exportarCSV()">Exportar CSV</button><button class="btn red" onclick="borrarDia()">Borrar día</button></section>
+<div class="fixed"><a class="btn alt" href="app_japon_estatica_visible.html">⬅️ App</a><button class="btn ok" onclick="agregarGasto()">Guardar</button><button class="btn warn" onclick="exportarCSV()">CSV</button></div>
+<script>
+const subcats={"Transporte":["Tren","Bus","Taxi","Shinkansen","Metro","Van Klook","Otro"],"Alimentación":["Desayuno","Almuerzo","Cena","Café","Snack","Konbini","Otro"],"Entradas turísticas":["Templo","Museo","Disney","Sanrio","Onsen","Tour","Otro"],"Suvenirs":["Anime","Templo","Dulces","Regalos","Otro"],"Compras":["Ropa","Zapatos","Cosmética","Anime","Tecnología","Otros"],"Otros":["Lavandería","Emergencia","Otro"]};
+function hoyISO(){const d=new Date();return d.toISOString().slice(0,10);}
+document.getElementById("fecha").value=localStorage.getItem("gastos_fecha")||hoyISO();
+function key(){return "gastos_japon_"+document.getElementById("fecha").value} function pkey(){return "presupuesto_japon_"+document.getElementById("fecha").value}
+function getGastos(){return JSON.parse(localStorage.getItem(key())||"[]")} function setGastos(a){localStorage.setItem(key(),JSON.stringify(a))}
+function actualizarSubcategoria(){const cat=document.getElementById("categoria").value, sub=document.getElementById("subcategoria");sub.innerHTML="";(subcats[cat]||["Otro"]).forEach(x=>{let o=document.createElement("option");o.value=x;o.textContent=x;sub.appendChild(o);});}
+function guardarPresupuesto(){localStorage.setItem(pkey(),document.getElementById("presupuesto").value||0);localStorage.setItem("gastos_fecha",document.getElementById("fecha").value);render();}
+document.getElementById("fecha").addEventListener("change",()=>{localStorage.setItem("gastos_fecha",document.getElementById("fecha").value);document.getElementById("presupuesto").value=localStorage.getItem(pkey())||"";render();});
+function agregarGasto(){const valor=Number(document.getElementById("valor").value||0), concepto=document.getElementById("concepto").value.trim(); if(!valor||!concepto){alert("Falta concepto o valor.");return;} const now=new Date(); const item={hora:String(now.getHours()).padStart(2,'0')+":"+String(now.getMinutes()).padStart(2,'0'),pagadoPor:pagadoPor.value,medioPago:medioPago.value,categoria:categoria.value,subcategoria:subcategoria.value,concepto,valor,notas:notas.value.trim()}; let arr=getGastos();arr.push(item);setGastos(arr);limpiarFormulario();render();}
+function limpiarFormulario(){concepto.value="";valor.value="";notas.value="";}
+function yen(n){return "¥"+Number(n||0).toLocaleString("ja-JP");}
+function render(){const presupuesto=Number(localStorage.getItem(pkey())||0);document.getElementById("presupuesto").value=presupuesto||"";const arr=getGastos();const total=arr.reduce((s,x)=>s+Number(x.valor),0);totalDia.textContent=yen(total);diferencia.textContent=yen(presupuesto-total);diferencia.style.color=(presupuesto-total)<0?"#ff4d6d":"#3ddc97";let resumen={},arqueo={};arr.forEach(x=>{resumen[x.categoria]=(resumen[x.categoria]||0)+Number(x.valor);arqueo[x.medioPago]=(arqueo[x.medioPago]||0)+Number(x.valor);});resumenDiv(resumen,"resumen");resumenDiv(arqueo,"arqueo");tabla.innerHTML=arr.map((x,i)=>`<tr><td>${x.hora}</td><td>${x.pagadoPor}</td><td>${x.medioPago}</td><td>${x.categoria}</td><td>${x.subcategoria}</td><td>${x.concepto}${x.notas?"<br><span class='mut'>"+x.notas+"</span>":""}</td><td>${yen(x.valor)}</td><td><button class="btn red" onclick="eliminar(${i})">X</button></td></tr>`).join("");}
+function resumenDiv(obj,id){document.getElementById(id).innerHTML=Object.keys(obj).length?Object.entries(obj).map(([k,v])=>`<div class="row"><div>${k}</div><b>${yen(v)}</b></div>`).join(""):'<p class="mut">Sin datos.</p>'}
+function eliminar(i){let arr=getGastos();arr.splice(i,1);setGastos(arr);render();}
+function borrarDia(){if(confirm("¿Borrar todos los gastos de este día?")){localStorage.removeItem(key());render();}}
+function exportarCSV(){const fecha=fecha.value;const rows=[["Fecha","Hora","Pagado por","Medio de pago","Categoria","Subcategoria","Concepto","Valor JPY","Notas"]];getGastos().forEach(x=>rows.push([fecha,x.hora,x.pagadoPor,x.medioPago,x.categoria,x.subcategoria,x.concepto,x.valor,x.notas]));const csv=rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`gastos_japon_${document.getElementById("fecha").value}.csv`;a.click();URL.revokeObjectURL(url);}
+actualizarSubcategoria();render();
+</script>
+</body></html>
