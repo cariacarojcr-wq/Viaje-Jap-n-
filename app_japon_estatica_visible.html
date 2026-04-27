@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Japón Día a Día Estático</title>
+<style>
+body{margin:0;background:#0f1115;color:#f5f7fb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;padding:14px 14px 90px;line-height:1.35}
+h1{font-size:22px;margin:4px 0 10px} h2{font-size:18px;margin:0 0 8px} h3{margin:12px 0 6px}
+.card{background:#1b1f2a;border:1px solid #30364a;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 6px 20px #0005}
+.crit{border-left:5px solid #ff4d6d}.normal{border-left:5px solid #333a50}
+.mut{color:#b6bfd1}.rule{background:#28220f;border-left:4px solid #ff9f1c;padding:10px;border-radius:10px;margin-top:8px;color:#ffe6aa}
+.btn{display:inline-block;text-decoration:none;color:white;background:#2b6cff;padding:11px 12px;border-radius:12px;margin:5px 5px 0 0;font-weight:650;font-size:14px}
+.ok{background:#168f5d}.warn{background:#ff9f1c;color:#111}.alt{background:#333a50}
+nav{display:flex;gap:7px;overflow-x:auto;margin:8px 0 14px;position:sticky;top:0;background:#0f1115;padding:8px 0;z-index:10}
+nav a{text-decoration:none;color:white;background:#2a3041;border:1px solid #30364a;padding:8px 10px;border-radius:999px;white-space:nowrap;font-size:13px}
+.row{display:grid;grid-template-columns:88px 1fr;gap:8px;border-bottom:1px solid #30364a;padding:9px 0}
+.time{font-weight:800;color:#fff}.act{font-weight:700}.note{color:#b6bfd1;font-size:14px}
+.fixed{position:fixed;bottom:0;left:0;right:0;background:#0f1115ed;border-top:1px solid #30364a;padding:10px;display:flex;gap:7px;justify-content:center;backdrop-filter:blur(8px)}
+</style>
+</head>
+<body>
+<h1>🇯🇵 Japón Día a Día — versión estática</h1>
+<nav><a href="#d0">15 dic</a><a href="#d1">16 dic</a><a href="#d2">17 dic</a><a href="#d3">18 dic</a><a href="#d4">19 dic</a><a href="#d5">20 dic</a><a href="#d6">21 dic</a><a href="#d7">22 dic</a><a href="#d8">23 dic</a><a href="#d9">24 dic</a><a href="#d10">25 dic</a><a href="#d11">26 dic</a><a href="#d12">27 dic</a><a href="#d13">28 dic</a><a href="#d14">29 dic</a></nav>
+
+<section class="card">
+<h2>🏠 Bases</h2>
+<p><b>Tokyo:</b> 3 Chome-26-12 Sumida, Sumida City, Tokyo 131-0031, Japón</p>
+<a class="btn ok" href="https://www.google.com/maps/search/?api=1&query=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n" target="_blank">🏠 Airbnb Tokyo</a>
+<p><b>Kyoto:</b> 53-1 Nichōme, Kyoto, Kyoto 605-0001, Japón</p>
+<a class="btn ok" href="https://www.google.com/maps/search/?api=1&query=53-1%20Nich%C5%8Dme%2C%20Kyoto%2C%20Kyoto%20605-0001%2C%20Jap%C3%B3n" target="_blank">🏠 Airbnb Kyoto</a>
+<a class="btn" href="https://www.google.com/maps/dir/?api=1&origin=Kyoto%20Station&destination=53-1%20Nich%C5%8Dme%2C%20Kyoto%2C%20Kyoto%20605-0001%2C%20Jap%C3%B3n&travelmode=transit" target="_blank">Kyoto Station → Airbnb Kyoto</a>
+</section>
+
+<section class="card" id="asistente">
+<h2>🤖 Asistente rápido</h2>
+<div class="rule"><b>Voy tarde:</b> recorta la última actividad y ve al punto principal.</div>
+<div class="rule"><b>Estoy cansada:</b> comida/café + regresar a base.</div>
+<div class="rule"><b>Llueve:</b> prioriza interiores; en Kyoto usa taxi corto.</div>
+<div class="rule"><b>Tengo hambre:</b> usa el restaurante del día o “comer cerca”.</div>
+<a class="btn" href="https://www.google.com/maps/search/restaurants+near+me" target="_blank">🍜 Comer cerca de mí</a>
+<a class="btn warn" href="https://www.google.com/search?q=clima+kawaguchiko" target="_blank">🗻 Clima Fuji</a>
+</section>
+
+
+<section class="card crit" id="d0">
+<h2>15 dic — Llegada Haneda → Airbnb Tokyo</h2>
+<p class="mut"><b>Estado:</b> CRÍTICO</p>
+<h3>🕒 Minuto a minuto</h3>
+<div class="row"><div class="time">Noche</div><div><div class="act">Llegada Haneda</div><div class="note">Migración + maletas</div></div></div><div class="row"><div class="time">+60–90 min</div><div><div class="act">Van Klook</div><div class="note">Haneda → Airbnb Tokyo</div></div></div><div class="row"><div class="time">Final</div><div><div class="act">Check-in</div><div class="note">Dormir</div></div></div>
+<h3>🍜 Comida</h3>
+<p>Konbini o cena ligera cerca del Airbnb. No salir lejos.</p>
+<h3>📍 Rutas / reservas</h3>
+<a class="btn" target="_blank" href="https://www.klook.com/airport-transfers/">🚐 Klook Van</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Haneda%20Airport&destination=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&travelmode=driving">✈️ Haneda → Airbnb</a><a class="btn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n">🏠 Airbnb Tokyo</a>
+</section>
+
+<section class="card normal" id="d1">
+<h2>16 dic — Senso-ji + Ueno Zoo + Ameyoko</h2>
+<p class="mut"><b>Estado:</b> NORMAL</p>
+<h3>🕒 Minuto a minuto</h3>
+<div class="row"><div class="time">09:30</div><div><div class="act">Salir Airbnb</div><div class="note">Ir hacia Asakusa</div></div></div><div class="row"><div class="time">10:00</div><div><div class="act">Senso-ji</div><div class="note">Kaminarimon + Nakamise + templo</div></div></div><div class="row"><div class="time">12:00</div><div><div class="act">Traslado a Ueno</div><div class="note">Metro/transporte público</div></div></div><div class="row"><div class="time">13:00</div><div><div class="act">Ueno Zoo</div><div class="note">Pandas/zoológico</div></div></div><div class="row"><div class="time">15:45</div><div><div class="act">Ameyoko</div><div class="note">Mercado + comida</div></div></div><div class="row"><div class="time">18:30</div><div><div class="act">Regreso Airbnb</div><div class="note">Descanso</div></div></div>
+<h3>🍜 Comida</h3>
+<p>Ichiran Ueno, Ameyoko street food o ramen simple.</p>
+<h3>📍 Rutas / reservas</h3>
+<a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&destination=Senso-ji%20Tokyo&travelmode=transit">🏠→Senso-ji</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Senso-ji%20Tokyo&destination=Ueno%20Zoo&travelmode=transit">Senso-ji→Ueno Zoo</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Ueno%20Zoo&destination=Ameyoko%20Market&travelmode=walking">Ueno Zoo→Ameyoko</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Ameyoko%20Market&destination=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&travelmode=transit">Ameyoko→🏠</a><a class="btn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Ichiran%20Ueno%20Tokyo">🍜 Ichiran Ueno</a>
+</section>
+
+<section class="card crit" id="d2">
+<h2>17 dic — Tokyo → Takaragawa Onsen</h2>
+<p class="mut"><b>Estado:</b> CRÍTICO</p>
+<h3>🕒 Minuto a minuto</h3>
+<div class="row"><div class="time">07:45</div><div><div class="act">Salir Airbnb</div><div class="note">Hacia Tokyo Station</div></div></div><div class="row"><div class="time">08:30</div><div><div class="act">Tokyo Station</div><div class="note">Validar andén</div></div></div><div class="row"><div class="time">09:00–09:20</div><div><div class="act">Joetsu Shinkansen</div><div class="note">Tokyo → Jomo-Kogen</div></div></div><div class="row"><div class="time">10:30</div><div><div class="act">Jomo-Kogen</div><div class="note">Buscar shuttle</div></div></div><div class="row"><div class="time">11:00–12:00</div><div><div class="act">Shuttle ryokan</div><div class="note">Hacia Takaragawa</div></div></div><div class="row"><div class="time">14:00</div><div><div class="act">Check-in</div><div class="note">Onsen + cena</div></div></div>
+<h3>🍜 Comida</h3>
+<p>Desayuno konbini. Cena ryokan.</p>
+<h3>📍 Rutas / reservas</h3>
+<a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&destination=Tokyo%20Station&travelmode=transit">Airbnb→Tokyo Station</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Tokyo%20Station&destination=Jomo-Kogen%20Station&travelmode=transit">Tokyo→Jomo-Kogen</a><a class="btn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Takaragawa%20Onsen%20Osenkaku">♨️ Takaragawa</a>
+</section>
+
+<section class="card normal" id="d3">
+<h2>18 dic — Takaragawa Onsen</h2>
+<p class="mut"><b>Estado:</b> NORMAL</p>
+<h3>🕒 Minuto a minuto</h3>
+<div class="row"><div class="time">08:00</div><div><div class="act">Desayuno</div><div class="note">Ryokan</div></div></div><div class="row"><div class="time">09:30</div><div><div class="act">Onsen exterior</div><div class="note">Descanso</div></div></div><div class="row"><div class="time">12:00</div><div><div class="act">Descanso</div><div class="note">Snacks</div></div></div><div class="row"><div class="time">15:00</div><div><div class="act">Onsen/fotos</div><div class="note">Luz de tarde</div></div></div><div class="row"><div class="time">18:00</div><div><div class="act">Cena</div><div class="note">Ryokan</div></div></div><div class="row"><div class="time">20:00</div><div><div class="act">Onsen nocturno</div><div class="note">Dormir temprano</div></div></div>
+<h3>🍜 Comida</h3>
+<p>Comidas del ryokan + snacks. No salir.</p>
+<h3>📍 Rutas / reservas</h3>
+<a class="btn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Takaragawa%20Onsen%20Osenkaku">♨️ Takaragawa</a>
+</section>
+
+<section class="card normal" id="d4">
+<h2>19 dic — Takaragawa → Tokyo</h2>
+<p class="mut"><b>Estado:</b> NORMAL</p>
+<h3>🕒 Minuto a minuto</h3>
+<div class="row"><div class="time">08:00</div><div><div class="act">Desayuno</div><div class="note">Ryokan</div></div></div><div class="row"><div class="time">10:00</div><div><div class="act">Check-out</div><div class="note">Revisar habitación</div></div></div><div class="row"><div class="time">10:30</div><div><div class="act">Shuttle</div><div class="note">A Jomo-Kogen</div></div></div><div class="row"><div class="time">12:30</div><div><div class="act">Shinkansen</div><div class="note">Jomo-Kogen → Tokyo</div></div></div><div class="row"><div class="time">14:00</div><div><div class="act">Llegada Tokyo</div><div class="note">Descanso/lavandería</div></div></div>
+<h3>🍜 Comida</h3>
+<p>Ekiben o comida de estación. Cena cerca del Airbnb.</p>
+<h3>📍 Rutas / reservas</h3>
+<a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Jomo-Kogen%20Station&destination=Tokyo%20Station&travelmode=transit">Jomo-Kogen→Tokyo</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Tokyo%20Station&destination=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&travelmode=transit">Tokyo Station→🏠</a>
+</section>
+
+<section class="card normal" id="d5">
+<h2>20 dic — Gotokuji + Nezu Shrine + Yanaka</h2>
+<p class="mut"><b>Estado:</b> NORMAL</p>
+<h3>🕒 Minuto a minuto</h3>
+<div class="row"><div class="time">08:30</div><div><div class="act">Salir Airbnb</div><div class="note">Hacia Gotokuji</div></div></div><div class="row"><div class="time">10:00</div><div><div class="act">Gotokuji</div><div class="note">Templo gatos</div></div></div><div class="row"><div class="time">12:30</div><div><div class="act">Almuerzo</div><div class="note">Local/ramen</div></div></div><div class="row"><div class="time">14:00</div><div><div class="act">Nezu Shrine</div><div class="note">Torii rojos</div></div></div><div class="row"><div class="time">15:30</div><div><div class="act">Yanaka</div><div class="note">Barrio tradicional</div></div></div><div class="row"><div class="time">17:30</div><div><div class="act">Regreso Airbnb</div><div class="note">Si cansancio, saltar Yanaka</div></div></div>
+<h3>🍜 Comida</h3>
+<p>Teishoku/ramen local. Café en Yanaka si hay energía.</p>
+<h3>📍 Rutas / reservas</h3>
+<a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&destination=Gotokuji%20Temple&travelmode=transit">🏠→Gotokuji</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Gotokuji%20Temple&destination=Nezu%20Shrine&travelmode=transit">Gotokuji→Nezu</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Nezu%20Shrine&destination=Yanaka%20Ginza&travelmode=transit">Nezu→Yanaka</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Yanaka%20Ginza&destination=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&travelmode=transit">Yanaka→🏠</a>
+</section>
+
+<section class="card crit" id="d6">
+<h2>21 dic — Fuji: Chureito + Lago + Oishi</h2>
+<p class="mut"><b>Estado:</b> CRÍTICO</p>
+<h3>🕒 Minuto a minuto</h3>
+<div class="row"><div class="time">05:30</div><div><div class="act">Revisar clima</div><div class="note">Si nublado/lluvia: cancelar</div></div></div><div class="row"><div class="time">05:45</div><div><div class="act">Salir Airbnb</div><div class="note">Hacia Shinjuku</div></div></div><div class="row"><div class="time">07:30</div><div><div class="act">Fuji Excursion</div><div class="note">Shinjuku → Kawaguchiko</div></div></div><div class="row"><div class="time">09:30</div><div><div class="act">Llegada Kawaguchiko</div><div class="note">Preparar tramo local</div></div></div><div class="row"><div class="time">10:00</div><div><div class="act">Chureito</div><div class="note">Arakurayama Sengen Park</div></div></div><div class="row"><div class="time">12:30</div><div><div class="act">Lago Kawaguchi</div><div class="note">Taxi desde Chureito</div></div></div><div class="row"><div class="time">14:00</div><div><div class="act">Oishi Park</div><div class="note">Taxi desde lago</div></div></div><div class="row"><div class="time">16:30</div><div><div class="act">Regreso</div><div class="note">Oishi → Kawaguchiko → Shinjuku</div></div></div>
+<h3>🍜 Comida</h3>
+<p>Desayuno konbini. Almuerzo rápido; si Fuji está despejado, fotos antes que comida.</p>
+<h3>📍 Rutas / reservas</h3>
+<a class="btn" target="_blank" href="https://www.google.com/search?q=clima+kawaguchiko">🌦️ Clima Fuji</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&destination=Shinjuku%20Station&travelmode=transit">Airbnb→Shinjuku</a><a class="btn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Fuji%20Excursion%20Shinjuku%20Kawaguchiko%20ticket">🚆 Buscar Fuji Excursion</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Kawaguchiko%20Station&destination=Arakurayama%20Sengen%20Park&travelmode=transit">Kawaguchiko→Chureito</a><a class="btn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=taxi%20Arakurayama%20Sengen%20Park%20to%20Lake%20Kawaguchi">🚕 Chureito→Lago TAXI</a><a class="btn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=taxi%20Lake%20Kawaguchi%20to%20Oishi%20Park%20Kawaguchiko">🚕 Lago→Oishi TAXI</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Oishi%20Park%20Kawaguchiko&destination=Kawaguchiko%20Station&travelmode=transit">Oishi→Kawaguchiko</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&destination=Tower%20Records%20Shibuya&travelmode=transit">Plan B Shibuya</a>
+</section>
+
+<section class="card crit" id="d7">
+<h2>22 dic — DisneySea</h2>
+<p class="mut"><b>Estado:</b> CRÍTICO</p>
+<h3>🕒 Minuto a minuto</h3>
+<div class="row"><div class="time">06:30</div><div><div class="act">Salir Airbnb</div><div class="note">Hacia Maihama</div></div></div><div class="row"><div class="time">07:30</div><div><div class="act">Llegar Disney</div><div class="note">Fila entrada</div></div></div><div class="row"><div class="time">09:00–21:00</div><div><div class="act">DisneySea</div><div class="note">Día completo</div></div></div><div class="row"><div class="time">21:30</div><div><div class="act">Regreso Airbnb</div><div class="note">No plan adicional</div></div></div>
+<h3>🍜 Comida</h3>
+<p>Comer dentro del parque.</p>
+<h3>📍 Rutas / reservas</h3>
+<a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&destination=Tokyo%20DisneySea&travelmode=transit">🏠→DisneySea</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Tokyo%20DisneySea&destination=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&travelmode=transit">DisneySea→🏠</a><a class="btn" target="_blank" href="https://www.tokyodisneyresort.jp/en/ticket/">🎟️ Tickets Disney</a>
+</section>
+
+<section class="card normal" id="d8">
+<h2>23 dic — Sailor Moon + Godzilla</h2>
+<p class="mut"><b>Estado:</b> NORMAL</p>
+<h3>🕒 Minuto a minuto</h3>
+<div class="row"><div class="time">10:00</div><div><div class="act">Salir Airbnb</div><div class="note">Hacia Azabu-Juban</div></div></div><div class="row"><div class="time">10:30</div><div><div class="act">Azabu-Juban</div><div class="note">Zona Sailor Moon</div></div></div><div class="row"><div class="time">12:30</div><div><div class="act">Almuerzo</div><div class="note">Azabu</div></div></div><div class="row"><div class="time">15:30</div><div><div class="act">Godzilla Head</div><div class="note">Shinjuku/Kabukicho</div></div></div><div class="row"><div class="time">18:00</div><div><div class="act">Cena</div><div class="note">Omoide Yokocho/ramen</div></div></div><div class="row"><div class="time">20:00</div><div><div class="act">Regreso Airbnb</div><div class="note">Ruta clara</div></div></div>
+<h3>🍜 Comida</h3>
+<p>Almuerzo Azabu. Cena Omoide Yokocho o ramen Shinjuku.</p>
+<h3>📍 Rutas / reservas</h3>
+<a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&destination=Azabu-Juban%20Tokyo&travelmode=transit">🏠→Azabu-Juban</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Azabu-Juban%20Tokyo&destination=Godzilla%20Head%20Shinjuku&travelmode=transit">Azabu→Godzilla</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Godzilla%20Head%20Shinjuku&destination=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&travelmode=transit">Godzilla→🏠</a><a class="btn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Omoide%20Yokocho%20Shinjuku">🍢 Omoide</a>
+</section>
+
+<section class="card crit" id="d9">
+<h2>24 dic — Tokyo → Kyoto + Gion</h2>
+<p class="mut"><b>Estado:</b> CRÍTICO</p>
+<h3>🕒 Minuto a minuto</h3>
+<div class="row"><div class="time">06:30</div><div><div class="act">Salir Airbnb Tokyo</div><div class="note">Solo morral</div></div></div><div class="row"><div class="time">08:00</div><div><div class="act">Shinkansen Nozomi</div><div class="note">Tokyo → Kyoto</div></div></div><div class="row"><div class="time">10:30</div><div><div class="act">Kyoto Station</div><div class="note">Llegada</div></div></div><div class="row"><div class="time">11:00</div><div><div class="act">Ir Airbnb Kyoto</div><div class="note">Taxi/transporte</div></div></div><div class="row"><div class="time">17:30</div><div><div class="act">Caminar a Gion</div><div class="note">Desde Airbnb Kyoto</div></div></div><div class="row"><div class="time">18:00–20:00</div><div><div class="act">Gion/Hanamikoji</div><div class="note">Barrio geishas</div></div></div><div class="row"><div class="time">20:30</div><div><div class="act">Cena Kyoto</div><div class="note">Gion/Kawaramachi</div></div></div>
+<h3>🍜 Comida</h3>
+<p>Gion Kappa, Ichiran Kyoto, Nishiki Market o % Arabica.</p>
+<h3>📍 Rutas / reservas</h3>
+<a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&destination=Tokyo%20Station&travelmode=transit">Tokyo Airbnb→Tokyo Station</a><a class="btn" target="_blank" href="https://smart-ex.jp/en/">🚄 SmartEX</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Kyoto%20Station&destination=53-1%20Nich%C5%8Dme%2C%20Kyoto%2C%20Kyoto%20605-0001%2C%20Jap%C3%B3n&travelmode=transit">Kyoto Station→Airbnb Kyoto</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=53-1%20Nich%C5%8Dme%2C%20Kyoto%2C%20Kyoto%20605-0001%2C%20Jap%C3%B3n&destination=Gion%20Kyoto&travelmode=walking">Airbnb Kyoto→Gion</a><a class="btn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Gion%20Kappa%20Kyoto">🍱 Gion Kappa</a><a class="btn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Ichiran%20Kyoto">🍜 Ichiran Kyoto</a><a class="btn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=%25%20Arabica%20Kyoto">☕ % Arabica</a>
+</section>
+
+<section class="card crit" id="d10">
+<h2>25 dic — Fushimi Inari + Otagi + regreso Tokyo</h2>
+<p class="mut"><b>Estado:</b> CRÍTICO</p>
+<h3>🕒 Minuto a minuto</h3>
+<div class="row"><div class="time">05:30</div><div><div class="act">Despertar</div><div class="note">Salida temprana</div></div></div><div class="row"><div class="time">05:45</div><div><div class="act">Salir Airbnb Kyoto</div><div class="note">Hacia Fushimi</div></div></div><div class="row"><div class="time">06:30–09:30</div><div><div class="act">Fushimi Inari</div><div class="note">Subir hasta Yotsutsuji</div></div></div><div class="row"><div class="time">10:00</div><div><div class="act">Café/desayuno</div><div class="note">Rápido</div></div></div><div class="row"><div class="time">12:30</div><div><div class="act">Otagi Nenbutsuji</div><div class="note">Templo oculto</div></div></div><div class="row"><div class="time">17:00</div><div><div class="act">Kyoto Station</div><div class="note">Preparar regreso</div></div></div><div class="row"><div class="time">18:00</div><div><div class="act">Shinkansen</div><div class="note">Kyoto → Tokyo</div></div></div><div class="row"><div class="time">20:30</div><div><div class="act">Tokyo Station</div><div class="note">Regreso Airbnb Tokyo</div></div></div>
+<h3>🍜 Comida</h3>
+<p>Café después de Fushimi. Almuerzo simple en Arashiyama o estación.</p>
+<h3>📍 Rutas / reservas</h3>
+<a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=53-1%20Nich%C5%8Dme%2C%20Kyoto%2C%20Kyoto%20605-0001%2C%20Jap%C3%B3n&destination=Fushimi%20Inari%20Taisha&travelmode=transit">Airbnb Kyoto→Fushimi</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Fushimi%20Inari%20Taisha&destination=Otagi%20Nenbutsuji&travelmode=transit">Fushimi→Otagi</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Otagi%20Nenbutsuji&destination=Kyoto%20Station&travelmode=transit">Otagi→Kyoto Station</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Tokyo%20Station&destination=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&travelmode=transit">Tokyo Station→Airbnb Tokyo</a><a class="btn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Nishiki%20Market%20Kyoto">🍱 Nishiki Market</a>
+</section>
+
+<section class="card normal" id="d11">
+<h2>26 dic — Ueno + Samurai Museum</h2>
+<p class="mut"><b>Estado:</b> NORMAL</p>
+<h3>🕒 Minuto a minuto</h3>
+<div class="row"><div class="time">09:30</div><div><div class="act">Salir Airbnb</div><div class="note">Hacia Ueno</div></div></div><div class="row"><div class="time">10:00</div><div><div class="act">Ueno Park</div><div class="note">Paseo</div></div></div><div class="row"><div class="time">11:00</div><div><div class="act">Ueno Toshogu</div><div class="note">Templo</div></div></div><div class="row"><div class="time">12:00</div><div><div class="act">Ameyoko</div><div class="note">Comida/mercado</div></div></div><div class="row"><div class="time">15:30</div><div><div class="act">Samurai Museum</div><div class="note">Experiencia</div></div></div><div class="row"><div class="time">18:30</div><div><div class="act">Regreso Airbnb</div><div class="note">Día ligero</div></div></div>
+<h3>🍜 Comida</h3>
+<p>Comer en Ameyoko. Café antes del museo.</p>
+<h3>📍 Rutas / reservas</h3>
+<a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&destination=Ueno%20Park&travelmode=transit">🏠→Ueno Park</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Ueno%20Park&destination=Ameyoko%20Market&travelmode=walking">Ueno→Ameyoko</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Ameyoko%20Market&destination=Samurai%20Ninja%20Museum%20Tokyo&travelmode=transit">Ameyoko→Samurai</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Samurai%20Ninja%20Museum%20Tokyo&destination=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&travelmode=transit">Samurai→🏠</a>
+</section>
+
+<section class="card normal" id="d12">
+<h2>27 dic — Sanrio Puroland</h2>
+<p class="mut"><b>Estado:</b> NORMAL</p>
+<h3>🕒 Minuto a minuto</h3>
+<div class="row"><div class="time">08:00</div><div><div class="act">Salir Airbnb</div><div class="note">Hacia Tama Center</div></div></div><div class="row"><div class="time">09:30</div><div><div class="act">Llegar</div><div class="note">Entrada lista</div></div></div><div class="row"><div class="time">10:00–16:00</div><div><div class="act">Sanrio Puroland</div><div class="note">Hello Kitty</div></div></div><div class="row"><div class="time">16:30</div><div><div class="act">Regreso Tokyo</div><div class="note">Cena tranquila</div></div></div><div class="row"><div class="time">19:00</div><div><div class="act">Cena</div><div class="note">Cerca Airbnb</div></div></div>
+<h3>🍜 Comida</h3>
+<p>Comer dentro de Sanrio.</p>
+<h3>📍 Rutas / reservas</h3>
+<a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&destination=Sanrio%20Puroland&travelmode=transit">🏠→Sanrio</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Sanrio%20Puroland&destination=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&travelmode=transit">Sanrio→🏠</a><a class="btn" target="_blank" href="https://en.puroland.jp/">🎟️ Tickets Sanrio</a>
+</section>
+
+<section class="card normal" id="d13">
+<h2>28 dic — Shibuya + Tower Records + anime</h2>
+<p class="mut"><b>Estado:</b> NORMAL</p>
+<h3>🕒 Minuto a minuto</h3>
+<div class="row"><div class="time">10:00</div><div><div class="act">Salir Airbnb</div><div class="note">Hacia Shibuya</div></div></div><div class="row"><div class="time">11:00</div><div><div class="act">Tower Records</div><div class="note">Música</div></div></div><div class="row"><div class="time">13:00</div><div><div class="act">Almuerzo</div><div class="note">Uobei/ramen</div></div></div><div class="row"><div class="time">14:00</div><div><div class="act">Crossing/Hachiko</div><div class="note">Fotos</div></div></div><div class="row"><div class="time">14:30</div><div><div class="act">Shibuya PARCO</div><div class="note">Nintendo</div></div></div><div class="row"><div class="time">16:00</div><div><div class="act">Pokémon Center</div><div class="note">Compras</div></div></div><div class="row"><div class="time">17:30</div><div><div class="act">Donki</div><div class="note">Souvenirs</div></div></div><div class="row"><div class="time">21:00</div><div><div class="act">Regreso Airbnb</div><div class="note">Empaque</div></div></div>
+<h3>🍜 Comida</h3>
+<p>Uobei Sushi o ramen rápido.</p>
+<h3>📍 Rutas / reservas</h3>
+<a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&destination=Tower%20Records%20Shibuya&travelmode=transit">🏠→Tower Records</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Tower%20Records%20Shibuya&destination=Shibuya%20PARCO&travelmode=walking">Tower→PARCO</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Shibuya%20PARCO&destination=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&travelmode=transit">PARCO→🏠</a><a class="btn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Uobei%20Shibuya">🍣 Uobei</a><a class="btn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=Don%20Quijote%20Shibuya">🛍️ Donki</a>
+</section>
+
+<section class="card crit" id="d14">
+<h2>29 dic — Salida Haneda</h2>
+<p class="mut"><b>Estado:</b> CRÍTICO</p>
+<h3>🕒 Minuto a minuto</h3>
+<div class="row"><div class="time">Mañana</div><div><div class="act">Compras finales cerca</div><div class="note">No alejarse</div></div></div><div class="row"><div class="time">Tarde</div><div><div class="act">Empaque</div><div class="note">8 maletas</div></div></div><div class="row"><div class="time">-4 h vuelo</div><div><div class="act">Van Klook a Haneda</div><div class="note">No tren</div></div></div><div class="row"><div class="time">Noche</div><div><div class="act">Vuelo</div><div class="note">Fin</div></div></div>
+<h3>🍜 Comida</h3>
+<p>Comida simple cerca del Airbnb o aeropuerto.</p>
+<h3>📍 Rutas / reservas</h3>
+<a class="btn" target="_blank" href="https://www.klook.com/airport-transfers/">🚐 Klook Van</a><a class="btn" target="_blank" href="https://www.google.com/maps/search/?api=1&query=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n">🏠 Airbnb Tokyo</a><a class="btn" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n&destination=Haneda%20Airport&travelmode=driving">Airbnb→Haneda</a>
+</section>
+
+
+<div class="fixed">
+<a class="btn ok" href="https://www.google.com/maps/search/?api=1&query=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n" target="_blank">Tokyo</a>
+<a class="btn ok" href="https://www.google.com/maps/search/?api=1&query=53-1%20Nich%C5%8Dme%2C%20Kyoto%2C%20Kyoto%20605-0001%2C%20Jap%C3%B3n" target="_blank">Kyoto</a>
+<a class="btn warn" href="#asistente">Asistente</a>
+<a class="btn" href="https://www.google.com/maps" target="_blank">Maps</a>
+</div>
+</body>
+</html>
