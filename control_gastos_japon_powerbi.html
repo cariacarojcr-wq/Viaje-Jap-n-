@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mini Power BI Gastos Japón</title>
+<style>
+:root{--bg:#0f1115;--card:#1b1f2a;--line:#30364a;--txt:#f5f7fb;--mut:#b6bfd1;--blue:#2b6cff;--ok:#168f5d;--warn:#ff9f1c;--red:#ff4d6d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;padding:14px 14px 95px;line-height:1.35}
+h1{font-size:22px;margin:4px 0 10px} h2{font-size:18px;margin:0 0 8px} h3{font-size:15px;margin:12px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 6px 20px #0005}
+label{display:block;color:var(--mut);margin-top:10px;font-size:14px}
+input,select,textarea{width:100%;padding:12px;border-radius:12px;background:#101722;color:white;border:1px solid var(--line);font-size:16px;margin-top:5px}
+textarea{min-height:65px}
+.btn{display:inline-block;text-decoration:none;color:white;background:var(--blue);padding:11px 12px;border-radius:12px;margin:7px 5px 0 0;font-weight:650;font-size:14px;border:0}
+.ok{background:var(--ok)}.warn{background:var(--warn);color:#111}.red{background:var(--red)}.alt{background:#333a50}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.kpi{background:#111722;border:1px solid var(--line);border-radius:12px;padding:10px}.kpi b{font-size:13px;color:var(--mut)}.kpi div{font-size:18px;font-weight:800;margin-top:4px}
+.row{display:grid;grid-template-columns:1fr auto;gap:10px;border-bottom:1px solid var(--line);padding:9px 0}
+.mut{color:var(--mut)}.over{color:var(--red)}.under{color:#3ddc97}
+table{width:100%;border-collapse:collapse;font-size:12px}td,th{border-bottom:1px solid var(--line);padding:7px;text-align:left;vertical-align:top}
+.fixed{position:fixed;bottom:0;left:0;right:0;background:#0f1115ed;border-top:1px solid var(--line);padding:10px;display:flex;gap:7px;justify-content:center;backdrop-filter:blur(8px)}
+.small{font-size:12px;color:var(--mut)}
+</style>
+</head>
+<body>
+<h1>💴 Mini Power BI — Gastos Japón</h1>
+
+<section class="card">
+<h2>⚙️ Configuración</h2>
+<div class="grid2">
+<div>
+<label>TRM ¥ → COP</label>
+<input id="trm" type="number" value="30" oninput="guardarTRM();calcularCOP();render();">
+</div>
+<div>
+<label>Fecha del gasto</label>
+<input id="fecha" type="date">
+</div>
+</div>
+<label>Presupuesto diario estimado ¥</label>
+<input id="presupuestoDia" type="number" placeholder="Ej: 12000">
+<button class="btn ok" onclick="guardarPresupuesto()">Guardar presupuesto del día</button>
+</section>
+
+<section class="card">
+<h2>➕ Registrar gasto</h2>
+<div class="grid2">
+<div>
+<label>Pagado por</label>
+<select id="pagadoPor">
+<option>Yo</option>
+<option>TC / Tarjeta crédito</option>
+<option>Otra persona</option>
+</select>
+</div>
+<div>
+<label>Medio de pago</label>
+<select id="medioPago">
+<option>Efectivo</option>
+<option>Tarjeta crédito</option>
+<option>Tarjeta débito</option>
+<option>Suica/PASMO</option>
+</select>
+</div>
+</div>
+
+<div class="grid2">
+<div>
+<label>Categoría</label>
+<select id="categoria" onchange="actualizarSubcategoria()">
+<option>Transporte</option>
+<option>Alimentación</option>
+<option>Entradas turísticas</option>
+<option>Suvenirs</option>
+<option>Compras</option>
+<option>Otros</option>
+</select>
+</div>
+<div>
+<label>Subcategoría</label>
+<select id="subcategoria"></select>
+</div>
+</div>
+
+<label>Concepto</label>
+<input id="concepto" type="text" placeholder="Ej: Taxi Chureito a Lago Kawaguchi">
+
+<div class="grid2">
+<div>
+<label>Valor ¥</label>
+<input id="valorYen" type="number" placeholder="Ej: 2500" oninput="calcularCOP()">
+</div>
+<div>
+<label>Valor COP</label>
+<input id="valorCOP" type="number" readonly>
+</div>
+</div>
+
+<label>Notas</label>
+<textarea id="notas" placeholder="Opcional"></textarea>
+
+<button class="btn ok" onclick="agregarGasto()">Guardar gasto</button>
+<button class="btn alt" onclick="limpiarFormulario()">Limpiar</button>
+</section>
+
+<section class="card">
+<h2>📊 Dashboard viaje</h2>
+<div class="grid2">
+<div class="kpi"><b>Total viaje ¥</b><div id="totalYen">¥0</div></div>
+<div class="kpi"><b>Total viaje COP</b><div id="totalCOP">$0</div></div>
+<div class="kpi"><b>Total día ¥</b><div id="totalDiaYen">¥0</div></div>
+<div class="kpi"><b>Vs presupuesto día</b><div id="difDia">¥0</div></div>
+</div>
+</section>
+
+<section class="card">
+<h2>📅 Resumen por día</h2>
+<div id="resumenDias"></div>
+</section>
+
+<section class="card">
+<h2>🏷️ Resumen por categoría</h2>
+<div id="resumenCategorias"></div>
+</section>
+
+<section class="card">
+<h2>💳 Arqueo por medio de pago</h2>
+<div id="resumenMedios"></div>
+</section>
+
+<section class="card">
+<h2>👤 Arqueo por pagado por</h2>
+<div id="resumenPagadoPor"></div>
+</section>
+
+<section class="card">
+<h2>📋 Detalle</h2>
+<div style="overflow-x:auto">
+<table>
+<thead>
+<tr><th>Fecha</th><th>Hora</th><th>Pagó</th><th>Medio</th><th>Categoría</th><th>Subcat.</th><th>Concepto</th><th>¥</th><th>COP</th><th></th></tr>
+</thead>
+<tbody id="tabla"></tbody>
+</table>
+</div>
+<button class="btn warn" onclick="exportarCSV()">Exportar CSV</button>
+<button class="btn red" onclick="borrarTodo()">Borrar todo</button>
+</section>
+
+<div class="fixed">
+<a class="btn alt" href="app_japon_estatica_visible.html">⬅️ App</a>
+<button class="btn ok" onclick="agregarGasto()">Guardar</button>
+<button class="btn warn" onclick="exportarCSV()">CSV</button>
+</div>
+
+<script>
+const subcats={
+"Transporte":["Tren","Bus","Taxi","Shinkansen","Metro","Van Klook","Otro"],
+"Alimentación":["Desayuno","Almuerzo","Cena","Café","Snack","Konbini","Otro"],
+"Entradas turísticas":["Templo","Museo","Disney","Sanrio","Onsen","Tour","Otro"],
+"Suvenirs":["Anime","Templo","Dulces","Regalos","Otro"],
+"Compras":["Ropa","Zapatos","Cosmética","Anime","Tecnología","Otros"],
+"Otros":["Lavandería","Emergencia","Otro"]
+};
+
+function hoyISO(){return new Date().toISOString().slice(0,10);}
+function yen(n){return "¥"+Number(n||0).toLocaleString("ja-JP");}
+function cop(n){return "$"+Number(n||0).toLocaleString("es-CO");}
+function getTRM(){return Number(localStorage.getItem("jp_trm")||document.getElementById("trm").value||30);}
+function gastos(){return JSON.parse(localStorage.getItem("jp_gastos")||"[]");}
+function setGastos(a){localStorage.setItem("jp_gastos",JSON.stringify(a));}
+function presupuestoKey(){return "jp_presupuesto_"+document.getElementById("fecha").value;}
+function guardarTRM(){localStorage.setItem("jp_trm",document.getElementById("trm").value||30);}
+function guardarPresupuesto(){localStorage.setItem(presupuestoKey(),document.getElementById("presupuestoDia").value||0);render();}
+
+document.getElementById("fecha").value=localStorage.getItem("jp_fecha")||hoyISO();
+document.getElementById("trm").value=localStorage.getItem("jp_trm")||30;
+document.getElementById("fecha").addEventListener("change",()=>{
+localStorage.setItem("jp_fecha",document.getElementById("fecha").value);
+document.getElementById("presupuestoDia").value=localStorage.getItem(presupuestoKey())||"";
+render();
+});
+
+function actualizarSubcategoria(){
+const cat=document.getElementById("categoria").value;
+const sub=document.getElementById("subcategoria");
+sub.innerHTML="";
+(subcats[cat]||["Otro"]).forEach(x=>{let o=document.createElement("option");o.value=x;o.textContent=x;sub.appendChild(o);});
+}
+
+function calcularCOP(){
+let v=Number(document.getElementById("valorYen").value||0);
+document.getElementById("valorCOP").value=Math.round(v*getTRM());
+}
+
+function agregarGasto(){
+const concepto=document.getElementById("concepto").value.trim();
+const yenes=Number(document.getElementById("valorYen").value||0);
+if(!concepto||!yenes){alert("Falta concepto o valor en yenes.");return;}
+const now=new Date();
+const item={
+fecha:document.getElementById("fecha").value,
+hora:String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0"),
+trm:getTRM(),
+pagadoPor:document.getElementById("pagadoPor").value,
+medioPago:document.getElementById("medioPago").value,
+categoria:document.getElementById("categoria").value,
+subcategoria:document.getElementById("subcategoria").value,
+concepto,
+valorYen:yenes,
+valorCOP:Math.round(yenes*getTRM()),
+notas:document.getElementById("notas").value.trim()
+};
+let arr=gastos(); arr.push(item); setGastos(arr);
+limpiarFormulario(); render();
+}
+
+function limpiarFormulario(){
+document.getElementById("concepto").value="";
+document.getElementById("valorYen").value="";
+document.getElementById("valorCOP").value="";
+document.getElementById("notas").value="";
+}
+
+function groupBy(arr,key){
+let out={};
+arr.forEach(x=>{out[x[key]]=(out[x[key]]||0)+Number(x.valorYen);});
+return out;
+}
+function groupByDate(arr){
+let out={};
+arr.forEach(x=>{out[x.fecha]=(out[x.fecha]||0)+Number(x.valorYen);});
+return out;
+}
+function renderGroup(obj,elid){
+const el=document.getElementById(elid);
+const entries=Object.entries(obj).sort((a,b)=>b[1]-a[1]);
+el.innerHTML=entries.length?entries.map(([k,v])=>`<div class="row"><div>${k}</div><b>${yen(v)}<br><span class="small">${cop(v*getTRM())}</span></b></div>`).join(""):"<p class='mut'>Sin datos.</p>";
+}
+
+function render(){
+const arr=gastos();
+const fecha=document.getElementById("fecha").value;
+const presupuesto=Number(localStorage.getItem(presupuestoKey())||0);
+document.getElementById("presupuestoDia").value=presupuesto||"";
+const total=arr.reduce((s,x)=>s+Number(x.valorYen),0);
+const totalDia=arr.filter(x=>x.fecha===fecha).reduce((s,x)=>s+Number(x.valorYen),0);
+const dif=presupuesto-totalDia;
+document.getElementById("totalYen").textContent=yen(total);
+document.getElementById("totalCOP").textContent=cop(total*getTRM());
+document.getElementById("totalDiaYen").textContent=yen(totalDia);
+document.getElementById("difDia").textContent=yen(dif);
+document.getElementById("difDia").className=dif<0?"over":"under";
+
+renderGroup(groupByDate(arr),"resumenDias");
+renderGroup(groupBy(arr,"categoria"),"resumenCategorias");
+renderGroup(groupBy(arr,"medioPago"),"resumenMedios");
+renderGroup(groupBy(arr,"pagadoPor"),"resumenPagadoPor");
+
+document.getElementById("tabla").innerHTML=arr.map((x,i)=>`
+<tr>
+<td>${x.fecha}</td><td>${x.hora}</td><td>${x.pagadoPor}</td><td>${x.medioPago}</td>
+<td>${x.categoria}</td><td>${x.subcategoria}</td><td>${x.concepto}${x.notas?'<br><span class="mut">'+x.notas+'</span>':''}</td>
+<td>${yen(x.valorYen)}</td><td>${cop(x.valorCOP)}</td>
+<td><button class="btn red" onclick="eliminar(${i})">X</button></td>
+</tr>`).join("");
+}
+
+function eliminar(i){let arr=gastos();arr.splice(i,1);setGastos(arr);render();}
+function borrarTodo(){if(confirm("¿Borrar todos los gastos del viaje?")){localStorage.removeItem("jp_gastos");render();}}
+function exportarCSV(){
+const rows=[["Fecha","Hora","TRM","Pagado por","Medio de pago","Categoria","Subcategoria","Concepto","Valor JPY","Valor COP","Notas"]];
+gastos().forEach(x=>rows.push([x.fecha,x.hora,x.trm,x.pagadoPor,x.medioPago,x.categoria,x.subcategoria,x.concepto,x.valorYen,x.valorCOP,x.notas]));
+const csv=rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\\n");
+const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+const url=URL.createObjectURL(blob);
+const a=document.createElement("a");
+a.href=url;a.download="gastos_japon_total.csv";a.click();URL.revokeObjectURL(url);
+}
+actualizarSubcategoria();
+document.getElementById("presupuestoDia").value=localStorage.getItem(presupuestoKey())||"";
+render();
+</script>
+</body>
+</html>
