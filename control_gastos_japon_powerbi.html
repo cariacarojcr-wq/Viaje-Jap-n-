@@ -1,8 +1,9 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
 <title>Mini Power BI Gastos Japón</title>
 <style>
 :root{--bg:#0f1115;--card:#1b1f2a;--line:#30364a;--txt:#f5f7fb;--mut:#b6bfd1;--blue:#2b6cff;--ok:#168f5d;--warn:#ff9f1c;--red:#ff4d6d}
@@ -26,22 +27,51 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{border-bottom:1px
 .budgetbox{background:#111722;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px}
 .sep{height:1px;background:var(--line);margin:12px 0}
 @media(max-width:390px){.grid3{grid-template-columns:1fr}.grid2{grid-template-columns:1fr 1fr}}
+
+.basebudget{background:#111722;border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
+.basebudget table{font-size:11px}
+.basebudget .big{font-size:20px;font-weight:800}
+.basebudget .good{color:#3ddc97}
+.basebudget .info{color:#8bb8ff}
+.backupbox{background:#111722;border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
 </style>
 </head>
 <body>
 <h1>💴 Mini Power BI — Gastos Japón</h1>
-
 <section class="card">
 <h2>⚙️ Configuración</h2>
 <div class="grid2">
 <div>
 <label>TRM ¥ → COP</label>
-<input id="trm" type="number" value="30" oninput="guardarTRM();calcularCOP();cargarPresupuestoFecha();render();">
+<input id="trm" oninput="guardarTRM();calcularCOP();cargarPresupuestoFecha();render();" type="number" value="30"/>
 </div>
 <div>
 <label>Fecha</label>
-<input id="fecha" type="date">
+<input id="fecha" type="date"/>
 </div>
+</div>
+</section>
+<section class="card" id="presupuesto-base-transporte">
+<h2>🚇 Presupuesto base de transporte — recuperado</h2>
+<p class="small">Estimación para el itinerario cerrado del 15–29 dic 2026. Se muestran 1 persona y 4 adultos. Klook van y excursiones ya separadas no se vuelven a presupuestar aquí.</p>
+<div class="basebudget">
+<div class="grid2">
+<div class="kpi"><b>1 persona</b><div>¥58,200</div><span class="small">≈ COP $1,746,000 con TRM ¥1 = COP 30</span></div>
+<div class="kpi"><b>4 adultos</b><div>¥232,800</div><span class="small">≈ COP $6,984,000 con TRM ¥1 = COP 30</span></div>
+</div>
+<p class="small"><b>Incluye colchón operativo</b> en días urbanos. Los importes exactos de Shinkansen y buses se sustituyen por el valor real cuando se compren.</p>
+<div style="overflow-x:auto">
+<table>
+<thead><tr><th>Fecha</th><th>1 pers.</th><th>4 pers.</th><th>Trayecto / criterio</th></tr></thead>
+<tbody><tr><td>15/12</td><td>¥0</td><td>¥0</td><td>Haneda → Airbnb: Klook van ya separada; no duplicar</td></tr><tr><td>16/12</td><td>¥1,200</td><td>¥4,800</td><td>Sumida → Asakusa → Ueno/Ameyoko → Aomi → Sumida</td></tr><tr><td>17/12</td><td>¥6,500</td><td>¥26,000</td><td>Tokyo → Jomo-Kogen en Joetsu Shinkansen + conexión urbana; shuttle ryokan aparte/incluido según reserva</td></tr><tr><td>18/12</td><td>¥0</td><td>¥0</td><td>Takaragawa Onsen: día de descanso</td></tr><tr><td>19/12</td><td>¥6,500</td><td>¥26,000</td><td>Jomo-Kogen → Tokyo + transporte urbano / Kappabashi opcional</td></tr><tr><td>20/12</td><td>¥2,500</td><td>¥10,000</td><td>Gotokuji → Ausgang → Nezu → Yanaka → Tateishi → Sumida</td></tr><tr><td>21/12</td><td>¥500</td><td>¥2,000</td><td>Airbnb ↔ Tokyo Station; excursión Fuji se controla aparte</td></tr><tr><td>22/12</td><td>¥1,500</td><td>¥6,000</td><td>Sumida ↔ Tokyo DisneySea</td></tr><tr><td>23/12</td><td>¥1,000</td><td>¥4,000</td><td>Sailor Moon → Ikebukuro → Nakano → Shinjuku; candidato Tokyo Subway Ticket 24 h</td></tr><tr><td>24/12</td><td>¥15,200</td><td>¥60,800</td><td>Tokyo → Kyoto Nozomi + conexiones urbanas</td></tr><tr><td>25/12</td><td>¥16,000</td><td>¥64,000</td><td>Kyoto local + Kyoto → Tokyo Nozomi + conexiones</td></tr><tr><td>26/12</td><td>¥1,200</td><td>¥4,800</td><td>Ueno Zoo → Ameyoko → Samurai Museum/Shinjuku → Sumida</td></tr><tr><td>27/12</td><td>¥4,800</td><td>¥19,200</td><td>Transporte urbano + bus ida/vuelta Gotemba Premium Outlets</td></tr><tr><td>28/12</td><td>¥800</td><td>¥3,200</td><td>Sumida → Harajuku → Shibuya → Sumida</td></tr><tr><td>29/12</td><td>¥500</td><td>¥2,000</td><td>Compras locales; van Klook 18:30 ya separada</td></tr></tbody>
+</table>
+</div>
+<button class="btn ok" onclick="cargarBaseTransporte(4)">Cargar transporte para 4 personas</button>
+<button class="btn alt" onclick="cargarBaseTransporte(1)">Cargar para 1 persona</button>
+</div>
+<div class="basebudget">
+<b>💡 Pases que controlaremos</b>
+<p class="small">23 dic: comparar Suica vs Tokyo Subway 24 h (¥1.000 por adulto). 17–19 dic: billetes Tokyo↔Jomo-Kogen se comparan con JR Tokyo Wide antes de comprar; el pase de 3 días no se presupone porque el 18 no usamos tren. 24–25 dic: Nozomi individual / SmartEX; no JR Pass nacional.</p>
 </div>
 </section>
 
@@ -64,27 +94,22 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{border-bottom:1px
 <select id="presupuestoSubcategoria"></select>
 </div>
 </div>
-
 <label>Presupuesto ¥</label>
-<input id="presupuestoValor" type="number" min="0" placeholder="Ej: 5000">
-
+<input id="presupuestoValor" min="0" placeholder="Ej: 5000" type="number"/>
 <button class="btn ok" onclick="agregarPresupuestoRubro()">Agregar / actualizar rubro</button>
-
 <h3>Presupuesto cargado para este día</h3>
 <div id="presupuestoDetalleDia"></div>
-
 <div class="grid2">
 <div>
 <label>Total presupuesto día ¥</label>
-<input id="presupuestoTotalDia" type="number" readonly>
+<input id="presupuestoTotalDia" readonly="" type="number"/>
 </div>
 <div>
 <label>Total presupuesto día COP</label>
-<input id="presupuestoTotalDiaCOP" type="number" readonly>
+<input id="presupuestoTotalDiaCOP" readonly="" type="number"/>
 </div>
 </div>
 </section>
-
 <section class="card">
 <h2>➕ Registrar gasto</h2>
 <div class="grid2">
@@ -106,7 +131,6 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{border-bottom:1px
 </select>
 </div>
 </div>
-
 <div class="grid2">
 <div>
 <label>Categoría</label>
@@ -124,28 +148,23 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{border-bottom:1px
 <select id="subcategoria"></select>
 </div>
 </div>
-
 <label>Concepto</label>
-<input id="concepto" type="text" placeholder="Ej: Taxi Chureito a Lago Kawaguchi">
-
+<input id="concepto" placeholder="Ej: Taxi Chureito a Lago Kawaguchi" type="text"/>
 <div class="grid2">
 <div>
 <label>Valor ¥</label>
-<input id="valorYen" type="number" placeholder="Ej: 2500" oninput="calcularCOP()">
+<input id="valorYen" oninput="calcularCOP()" placeholder="Ej: 2500" type="number"/>
 </div>
 <div>
 <label>Valor COP</label>
-<input id="valorCOP" type="number" readonly>
+<input id="valorCOP" readonly="" type="number"/>
 </div>
 </div>
-
 <label>Notas</label>
 <textarea id="notas" placeholder="Opcional"></textarea>
-
 <button class="btn ok" onclick="agregarGasto()">Guardar gasto</button>
 <button class="btn alt" onclick="limpiarFormulario()">Limpiar</button>
 </section>
-
 <section class="card">
 <h2>📊 Dashboard viaje</h2>
 <div class="grid2">
@@ -156,7 +175,6 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{border-bottom:1px
 <div class="kpi"><b>Saldo viaje ¥</b><div id="saldoViajeYen">¥0</div></div>
 <div class="kpi"><b>% presupuesto usado</b><div id="pctViaje">0%</div></div>
 </div>
-
 <h3>📅 Día seleccionado</h3>
 <div class="grid2">
 <div class="kpi"><b>Presupuesto día ¥</b><div id="presupuestoDiaKPI">¥0</div></div>
@@ -165,37 +183,40 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{border-bottom:1px
 <div class="kpi"><b>Gasto día COP</b><div id="totalDiaCOP">$0</div></div>
 </div>
 </section>
-
 <section class="card">
 <h2>💰 Presupuesto total del viaje por rubros</h2>
 <div id="resumenPresupuestoRubros"></div>
 </section>
-
 <section class="card">
 <h2>📊 Presupuesto vs gasto del día por rubro</h2>
 <div id="comparativoDia"></div>
 </section>
-
 <section class="card">
 <h2>📅 Presupuesto día vs gasto real — total y por rubros</h2>
 <div id="resumenDias"></div>
 </section>
-
 <section class="card">
 <h2>🏷️ Resumen por categoría</h2>
 <div id="resumenCategorias"></div>
 </section>
-
 <section class="card">
 <h2>💳 Arqueo por medio de pago</h2>
 <div id="resumenMedios"></div>
 </section>
-
 <section class="card">
 <h2>👤 Arqueo por pagado por</h2>
 <div id="resumenPagadoPor"></div>
 </section>
 
+<section class="card" id="backup-presupuesto">
+<h2>🛡️ Copia de seguridad</h2>
+<div class="backupbox">
+<p class="small">El presupuesto y los gastos se guardan en el navegador. Para que no vuelva a perderse, exporta periódicamente una copia JSON. La copia incluye gastos, presupuestos y TRM.</p>
+<button class="btn warn" onclick="exportarBackupJSON()">⬇️ Exportar respaldo JSON</button>
+<label>Restaurar respaldo</label>
+<input accept=".json,application/json" id="archivoBackup" onchange="importarBackupJSON(event)" type="file"/>
+</div>
+</section>
 <section class="card">
 <h2>📋 Detalle</h2>
 <div style="overflow-x:auto">
@@ -210,13 +231,11 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{border-bottom:1px
 <button class="btn red" onclick="borrarTodo()">Borrar todos los gastos</button>
 <button class="btn alt" onclick="borrarPresupuestos()">Borrar presupuestos</button>
 </section>
-
 <div class="fixed">
 <a class="btn alt" href="app_japon_estatica_visible.html">⬅️ App</a>
 <button class="btn ok" onclick="agregarGasto()">Guardar</button>
 <button class="btn warn" onclick="exportarCSV()">CSV</button>
 </div>
-
 <script>
 const subcats={
 "Transporte":["Tren","Bus","Taxi","Shinkansen","Metro","Van Klook","Otro"],
@@ -566,6 +585,63 @@ function exportarCSV(){
   const url=URL.createObjectURL(blob);
   const a=document.createElement("a");
   a.href=url; a.download="gastos_japon_total.csv"; a.click(); URL.revokeObjectURL(url);
+}
+
+
+const BASE_TRANSPORTE_2026 = [{"fecha": "2026-12-15", "pp": 0, "nota": "Haneda → Airbnb: Klook van ya separada; no duplicar"}, {"fecha": "2026-12-16", "pp": 1200, "nota": "Sumida → Asakusa → Ueno/Ameyoko → Aomi → Sumida"}, {"fecha": "2026-12-17", "pp": 6500, "nota": "Tokyo → Jomo-Kogen en Joetsu Shinkansen + conexión urbana; shuttle ryokan aparte/incluido según reserva"}, {"fecha": "2026-12-18", "pp": 0, "nota": "Takaragawa Onsen: día de descanso"}, {"fecha": "2026-12-19", "pp": 6500, "nota": "Jomo-Kogen → Tokyo + transporte urbano / Kappabashi opcional"}, {"fecha": "2026-12-20", "pp": 2500, "nota": "Gotokuji → Ausgang → Nezu → Yanaka → Tateishi → Sumida"}, {"fecha": "2026-12-21", "pp": 500, "nota": "Airbnb ↔ Tokyo Station; excursión Fuji se controla aparte"}, {"fecha": "2026-12-22", "pp": 1500, "nota": "Sumida ↔ Tokyo DisneySea"}, {"fecha": "2026-12-23", "pp": 1000, "nota": "Sailor Moon → Ikebukuro → Nakano → Shinjuku; candidato Tokyo Subway Ticket 24 h"}, {"fecha": "2026-12-24", "pp": 15200, "nota": "Tokyo → Kyoto Nozomi + conexiones urbanas"}, {"fecha": "2026-12-25", "pp": 16000, "nota": "Kyoto local + Kyoto → Tokyo Nozomi + conexiones"}, {"fecha": "2026-12-26", "pp": 1200, "nota": "Ueno Zoo → Ameyoko → Samurai Museum/Shinjuku → Sumida"}, {"fecha": "2026-12-27", "pp": 4800, "nota": "Transporte urbano + bus ida/vuelta Gotemba Premium Outlets"}, {"fecha": "2026-12-28", "pp": 800, "nota": "Sumida → Harajuku → Shibuya → Sumida"}, {"fecha": "2026-12-29", "pp": 500, "nota": "Compras locales; van Klook 18:30 ya separada"}];
+
+function cargarBaseTransporte(personas){
+  if(!confirm(`¿Cargar el presupuesto base de transporte para ${personas} persona(s)? Se actualizará solo el rubro Transporte/General de cada fecha; no borra otros presupuestos.`)) return;
+  BASE_TRANSPORTE_2026.forEach(x=>{
+    let lista=getPresupuestoLista(x.fecha);
+    const valor=Number(x.pp||0)*personas;
+    const idx=lista.findIndex(r=>r.categoria==="Transporte" && r.subcategoria==="General");
+    if(valor>0){
+      if(idx>=0) lista[idx].valor=valor;
+      else lista.push({categoria:"Transporte",subcategoria:"General",valor});
+    } else if(idx>=0){
+      lista.splice(idx,1);
+    }
+    setPresupuestoLista(x.fecha,lista);
+  });
+  localStorage.setItem("jp_base_transporte_personas",String(personas));
+  cargarPresupuestoFecha();
+  render();
+  alert("Presupuesto base de transporte cargado para "+personas+" persona(s).");
+}
+
+function exportarBackupJSON(){
+  const data={version:"JP-2026-v5",exportado:new Date().toISOString(),storage:{}};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k && (k.startsWith("jp_"))) data.storage[k]=localStorage.getItem(k);
+  }
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="backup_presupuesto_gastos_japon_2026.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importarBackupJSON(event){
+  const file=event.target.files && event.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!data.storage || typeof data.storage!=="object") throw new Error("Formato inválido");
+      if(!confirm("¿Restaurar este respaldo? Reemplazará los datos jp_ actuales del navegador.")) return;
+      const borrar=[];
+      for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith("jp_")) borrar.push(k);}
+      borrar.forEach(k=>localStorage.removeItem(k));
+      Object.entries(data.storage).forEach(([k,v])=>localStorage.setItem(k,v));
+      location.reload();
+    }catch(e){alert("No se pudo restaurar el respaldo: "+e.message);}
+  };
+  reader.readAsText(file);
 }
 
 document.getElementById("fecha").value=localStorage.getItem("jp_fecha")||hoyISO();
