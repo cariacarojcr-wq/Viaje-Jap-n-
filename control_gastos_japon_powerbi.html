@@ -61,7 +61,7 @@ select.compact{font-size:13px;padding:6px;min-width:120px}
 <div class="grid2">
 <div>
 <label>Tasa del día — COP por ¥1</label>
-<input id="trm" oninput="guardarTRM();calcularCOP();calcularIngreso();cargarPresupuestoFecha();render();" type="number" min="0.000001" step="any" value="30"/>
+<input id="trm" oninput="guardarTRM();calcularCOP();calcularIngreso();cargarPresupuestoFecha();render();" type="text" inputmode="decimal" value="30"/>
 <span class="small">Tasa de referencia editable por fecha. No es la TRM oficial USD/COP. Para pagos en yenes puedes registrar la tasa efectiva de tu banco.</span>
 </div>
 <div>
@@ -242,7 +242,7 @@ select.compact{font-size:13px;padding:6px;min-width:120px}
 </div>
 </div>
 <label>Concepto</label>
-<input id="concepto" placeholder="Ej: Taxi Chureito a Lago Kawaguchi" type="text"/>
+<input id="concepto" placeholder="Ej: Taxi Chureito a Lago Kawaguchi" type="text" oninput="limpiarErrorGasto()"/>
 <div class="grid2">
 <div><label>Moneda en que se pagó</label>
 <select id="monedaGasto" onchange="actualizarMonedaGasto()"><option value="JPY">Yenes (JPY)</option><option value="COP">Pesos colombianos (COP)</option></select></div>
@@ -251,13 +251,13 @@ select.compact{font-size:13px;padding:6px;min-width:120px}
 </div>
 <div id="bloqueTasaBancoGasto">
 <label>Tasa efectiva del banco (COP por ¥1) — opcional</label>
-<input id="tasaBancoGasto" type="number" min="0" step="any" placeholder="Vacío = tasa del día" oninput="calcularCOP()"/>
+<input id="tasaBancoGasto" type="text" inputmode="decimal" placeholder="Vacío = tasa del día; ej: 30,50" oninput="calcularCOP();limpiarErrorGasto()"/>
 <span class="small">Si el banco cobró una tasa distinta, escríbela aquí. No modifica la tasa de los demás gastos.</span>
 </div>
 <div class="grid2">
 <div>
 <label id="etiquetaValorGasto">Importe pagado ¥</label>
-<input id="valorYen" oninput="calcularCOP()" min="0" step="any" placeholder="Ej: 2500" type="number"/>
+<input id="valorYen" oninput="calcularCOP();limpiarErrorGasto()" inputmode="decimal" placeholder="Ej: 2500 o 2.500" type="text"/>
 </div>
 <div>
 <label>Equivalente COP</label>
@@ -267,6 +267,7 @@ select.compact{font-size:13px;padding:6px;min-width:120px}
 <div class="small" id="equivalenteYenesGasto"></div>
 <label>Notas</label>
 <textarea id="notas" placeholder="Opcional"></textarea>
+<p id="errorGuardarGasto" role="alert" aria-live="assertive" style="display:none;color:#b42318;font-weight:650;margin:8px 0;"></p>
 <button class="btn ok" onclick="agregarGasto()">Guardar gasto</button>
 <button class="btn alt" onclick="limpiarFormulario()">Limpiar</button>
 </section>
@@ -505,6 +506,42 @@ function mostrarTasaDia(){document.getElementById("trm").value=tasaDia(fechaActu
 function redondearCOP(n){return Math.round((Number(n)||0)*100)/100;}
 function fmtImporte(n,moneda){return moneda==='USD'?'US$'+Number(n||0).toLocaleString('es-CO',{maximumFractionDigits:2}):(moneda==='COP'?cop(n):yen(n));}
 function escapeHTML(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+// Acepta notación colombiana e internacional sin confundir miles con decimales.
+// Ejemplos: 2.500 -> 2500; 2.500,50 -> 2500.50; 2,500.50 -> 2500.50; 30,5 -> 30.5.
+function parseNumeroFlexible(raw){
+  if(typeof raw==='number')return Number.isFinite(raw)?raw:NaN;
+  let s=String(raw??'').trim().replace(/[\s\u00a0\u202f¥$]/g,'').replace(/COP|JPY|USD/gi,'');
+  if(!s||!/^[+-]?[\d.,]+$/.test(s))return NaN;
+  const comma=s.lastIndexOf(','),dot=s.lastIndexOf('.');
+  if(comma>=0&&dot>=0){
+    const decimal=comma>dot?',':'.';
+    const thousands=decimal===','?'.':',';
+    s=s.split(thousands).join('').replace(decimal,'.');
+  }else if(comma>=0||dot>=0){
+    const sep=comma>=0?',':'.';
+    const chunks=s.split(sep);
+    if(chunks.length>2){
+      if(chunks.slice(1).every(x=>x.length===3))s=chunks.join('');
+      else if(chunks.slice(1,-1).every(x=>x.length===3))s=chunks.slice(0,-1).join('')+'.'+chunks.at(-1);
+      else return NaN;
+    }else{
+      const decimals=chunks[1]?.length??0;
+      if(decimals===3&&chunks[0].replace(/^[+-]/,'').length<=3)s=chunks.join('');
+      else s=chunks.join('.');
+    }
+  }
+  const v=Number(s);
+  return Number.isFinite(v)?v:NaN;
+}
+function limpiarErrorGasto(){
+  const el=document.getElementById('errorGuardarGasto');
+  if(el){el.textContent='';el.style.display='none';}
+}
+function mostrarErrorGasto(mensaje,campo){
+  const el=document.getElementById('errorGuardarGasto');
+  if(el){el.textContent=mensaje;el.style.display='block';}
+  if(campo){document.getElementById(campo)?.focus();}
+}
 function importeConvertido(importe,moneda,tasa){
   const v=Number(importe),t=Number(tasa);
   if(!Number.isFinite(v)||v<=0||!Number.isFinite(t)||t<=0) return null;
@@ -560,7 +597,7 @@ function totalPresupuestoFecha(fecha){
 }
 
 function guardarTRM(){
-  const v=Number(document.getElementById('trm').value);
+  const v=parseNumeroFlexible(document.getElementById('trm').value);
   if(!Number.isFinite(v)||v<=0) return;
   secureStore.setItem('jp_trm_dia_'+fechaActual(),String(v));
 }
@@ -631,12 +668,14 @@ function actualizarMonedaGasto(){
   calcularCOP();
 }
 function tasaEfectivaGasto(){
-  const banco=Number(document.getElementById('tasaBancoGasto').value);
-  return document.getElementById('monedaGasto').value==='JPY' && banco>0?banco:getTRM();
+  const campo=document.getElementById('tasaBancoGasto').value.trim();
+  const banco=parseNumeroFlexible(campo);
+  // Una tasa escrita pero inválida nunca debe reemplazarse silenciosamente por la tasa del día.
+  return document.getElementById('monedaGasto').value==='JPY' && campo!=='' ? banco : getTRM();
 }
 function calcularCOP(){
   const moneda=document.getElementById('monedaGasto').value;
-  const v=Number(document.getElementById('valorYen').value||0);
+  const v=parseNumeroFlexible(document.getElementById('valorYen').value);
   const convertido=importeConvertido(v,moneda,tasaEfectivaGasto());
   document.getElementById('valorCOP').value=convertido?redondearCOP(convertido.cop):'';
   document.getElementById('equivalenteYenesGasto').textContent=convertido?
@@ -721,12 +760,16 @@ function descargarCSV(rows,nombre){
 }
 
 function agregarGasto(){
+  limpiarErrorGasto();
   const concepto=document.getElementById("concepto").value.trim();
   const moneda=document.getElementById('monedaGasto').value;
-  const valorOriginal=Number(document.getElementById('valorYen').value);
+  const valorOriginal=parseNumeroFlexible(document.getElementById('valorYen').value);
   const tasa=tasaEfectivaGasto();
+  if(!concepto){mostrarErrorGasto('Escribe el concepto del gasto (por ejemplo, Almuerzo en Tokio).','concepto');return;}
+  if(!Number.isFinite(valorOriginal)||valorOriginal<=0){mostrarErrorGasto('Escribe un importe mayor que cero. Puedes usar 2500, 2.500 o 2.500,50.','valorYen');return;}
+  if(!Number.isFinite(tasa)||tasa<=0){mostrarErrorGasto('La tasa no es válida. Escribe cuántos pesos COP cuesta 1 yen (ejemplo: 30,50). Si no conoces la tasa bancaria, deja ese campo vacío y revisa la tasa del día.','tasaBancoGasto');return;}
   const c=importeConvertido(valorOriginal,moneda,tasa);
-  if(!concepto||!c){alert('Falta concepto o importe positivo, o la tasa de cambio no es válida.');return;}
+  if(!c){mostrarErrorGasto('No se pudo convertir el importe. Revisa el valor y la tasa.','valorYen');return;}
 
   const now=new Date();
   const item={
@@ -734,7 +777,7 @@ function agregarGasto(){
     hora:String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0"),
     trm:tasa,
     trmDia:getTRM(),
-    trmBanco:moneda==='JPY'&&Number(document.getElementById('tasaBancoGasto').value)>0?Number(document.getElementById('tasaBancoGasto').value):null,
+    trmBanco:moneda==='JPY'&&document.getElementById('tasaBancoGasto').value.trim()!==''?tasa:null,
     monedaOriginal:moneda,
     valorOriginal,
     fondo:document.getElementById('fondoGasto').value,
