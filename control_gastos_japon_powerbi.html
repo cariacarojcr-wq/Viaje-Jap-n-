@@ -42,8 +42,9 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{border-bottom:1px
 <h2>⚙️ Configuración</h2>
 <div class="grid2">
 <div>
-<label>TRM ¥ → COP</label>
-<input id="trm" oninput="guardarTRM();calcularCOP();cargarPresupuestoFecha();render();" type="number" value="30"/>
+<label>Tasa del día — COP por ¥1</label>
+<input id="trm" oninput="guardarTRM();calcularCOP();calcularIngreso();cargarPresupuestoFecha();render();" type="number" min="0.000001" step="any" value="30"/>
+<span class="small">Tasa de referencia editable por fecha. No es la TRM oficial USD/COP. Para pagos en yenes puedes registrar la tasa efectiva de tu banco.</span>
 </div>
 <div>
 <label>Fecha</label>
@@ -53,28 +54,45 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{border-bottom:1px
 </section>
 <section class="card" id="presupuesto-base-transporte">
 <h2>🚇 Presupuesto base de transporte — recuperado</h2>
-<p class="small">Estimación para el itinerario cerrado del 15–29 dic 2026. Se muestran 1 persona y 4 adultos. Klook van y excursiones ya separadas no se vuelven a presupuestar aquí.</p>
+<p class="small">Estimación de transporte para 5 adultos, del 15 al 29 de diciembre de 2026. Los traslados Klook y las excursiones se presupuestan por separado para evitar duplicaciones.</p>
 <div class="basebudget">
 <div class="grid2">
 <div class="kpi"><b>1 persona</b><div>¥58,200</div><span class="small">≈ COP $1,746,000 con TRM ¥1 = COP 30</span></div>
-<div class="kpi"><b>4 adultos</b><div>¥232,800</div><span class="small">≈ COP $6,984,000 con TRM ¥1 = COP 30</span></div>
+<div class="kpi"><b>5 adultos</b><div>¥291,000</div><span class="small">≈ COP $6,984,000 con TRM ¥1 = COP 30</span></div>
 </div>
 <p class="small"><b>Incluye colchón operativo</b> en días urbanos. Los importes exactos de Shinkansen y buses se sustituyen por el valor real cuando se compren.</p>
 <div style="overflow-x:auto">
 <table>
-<thead><tr><th>Fecha</th><th>1 pers.</th><th>4 pers.</th><th>Trayecto / criterio</th></tr></thead>
-<tbody><tr><td>15/12</td><td>¥0</td><td>¥0</td><td>Haneda → Airbnb: Klook van ya separada; no duplicar</td></tr><tr><td>16/12</td><td>¥1,200</td><td>¥4,800</td><td>Sumida → Asakusa → Ueno/Ameyoko → Aomi → Sumida</td></tr><tr><td>17/12</td><td>¥6,500</td><td>¥26,000</td><td>Tokyo → Jomo-Kogen en Joetsu Shinkansen + conexión urbana; shuttle ryokan aparte/incluido según reserva</td></tr><tr><td>18/12</td><td>¥0</td><td>¥0</td><td>Takaragawa Onsen: día de descanso</td></tr><tr><td>19/12</td><td>¥6,500</td><td>¥26,000</td><td>Jomo-Kogen → Tokyo + transporte urbano / Kappabashi opcional</td></tr><tr><td>20/12</td><td>¥2,500</td><td>¥10,000</td><td>Gotokuji → Ausgang → Nezu → Yanaka → Tateishi → Sumida</td></tr><tr><td>21/12</td><td>¥500</td><td>¥2,000</td><td>Airbnb ↔ Tokyo Station; excursión Fuji se controla aparte</td></tr><tr><td>22/12</td><td>¥1,500</td><td>¥6,000</td><td>Sumida ↔ Tokyo DisneySea</td></tr><tr><td>23/12</td><td>¥1,000</td><td>¥4,000</td><td>Sailor Moon → Ikebukuro → Nakano → Shinjuku; candidato Tokyo Subway Ticket 24 h</td></tr><tr><td>24/12</td><td>¥15,200</td><td>¥60,800</td><td>Tokyo → Kyoto Nozomi + conexiones urbanas</td></tr><tr><td>25/12</td><td>¥16,000</td><td>¥64,000</td><td>Kyoto local + Kyoto → Tokyo Nozomi + conexiones</td></tr><tr><td>26/12</td><td>¥1,200</td><td>¥4,800</td><td>Ueno Zoo → Ameyoko → Samurai Museum/Shinjuku → Sumida</td></tr><tr><td>27/12</td><td>¥4,800</td><td>¥19,200</td><td>Transporte urbano + bus ida/vuelta Gotemba Premium Outlets</td></tr><tr><td>28/12</td><td>¥800</td><td>¥3,200</td><td>Sumida → Harajuku → Shibuya → Sumida</td></tr><tr><td>29/12</td><td>¥500</td><td>¥2,000</td><td>Compras locales; van Klook 18:30 ya separada</td></tr></tbody>
+<thead><tr><th>Fecha</th><th>1 pers.</th><th>5 pers.</th><th>Trayecto / criterio</th></tr></thead>
+<tbody><tr><td>15/12</td><td>¥0</td><td>¥0</td><td>Haneda → Airbnb: Klook van ya separada; no duplicar</td></tr><tr><td>16/12</td><td>¥1,200</td><td>¥6,000</td><td>Sumida → Asakusa → Ueno/Ameyoko → Aomi → Sumida</td></tr><tr><td>17/12</td><td>¥6,500</td><td>¥32,500</td><td>Tokyo → Jomo-Kogen en Joetsu Shinkansen + conexión urbana; shuttle ryokan aparte/incluido según reserva</td></tr><tr><td>18/12</td><td>¥0</td><td>¥0</td><td>Takaragawa Onsen: día de descanso</td></tr><tr><td>19/12</td><td>¥6,500</td><td>¥32,500</td><td>Jomo-Kogen → Tokyo + transporte urbano / Kappabashi opcional</td></tr><tr><td>20/12</td><td>¥2,500</td><td>¥12,500</td><td>Gotokuji → Hachioji (Eco Town + Yoshinoya) → Nezu → Yanaka → Sumida</td></tr><tr><td>21/12</td><td>¥500</td><td>¥2,500</td><td>Airbnb ↔ Tokyo Station; excursión Fuji se controla aparte</td></tr><tr><td>22/12</td><td>¥1,500</td><td>¥7,500</td><td>Sumida ↔ Tokyo DisneySea</td></tr><tr><td>23/12</td><td>¥1,000</td><td>¥5,000</td><td>Sailor Moon → Ikebukuro → Nakano → Shinjuku; candidato Tokyo Subway Ticket 24 h</td></tr><tr><td>24/12</td><td>¥15,200</td><td>¥76,000</td><td>Tokyo → Kyoto Nozomi + conexiones urbanas</td></tr><tr><td>25/12</td><td>¥16,000</td><td>¥80,000</td><td>Kyoto local + Kyoto → Tokyo Nozomi + conexiones</td></tr><tr><td>26/12</td><td>¥1,200</td><td>¥6,000</td><td>Ueno Zoo → Ameyoko → Samurai Museum/Shinjuku → Sumida</td></tr><tr><td>27/12</td><td>¥4,800</td><td>¥24,000</td><td>Transporte urbano + bus ida/vuelta Gotemba Premium Outlets</td></tr><tr><td>28/12</td><td>¥800</td><td>¥4,000</td><td>Sumida → Harajuku → Shibuya → Sumida</td></tr><tr><td>29/12</td><td>¥500</td><td>¥2,500</td><td>Compras locales; van Klook 18:30 ya separada</td></tr></tbody>
 </table>
 </div>
-<button class="btn ok" onclick="cargarBaseTransporte(4)">Cargar transporte para 4 personas</button>
+<button class="btn ok" onclick="cargarBaseTransporte(5)">Cargar transporte para 5 personas</button>
 <button class="btn alt" onclick="cargarBaseTransporte(1)">Cargar para 1 persona</button>
 </div>
 <div class="basebudget">
 <b>💡 Pases que controlaremos</b>
 <p class="small">23 dic: comparar Suica vs Tokyo Subway 24 h (¥1.000 por adulto). 17–19 dic: billetes Tokyo↔Jomo-Kogen se comparan con JR Tokyo Wide antes de comprar; el pase de 3 días no se presupone porque el 18 no usamos tren. 24–25 dic: Nozomi individual / SmartEX; no JR Pass nacional.</p>
 </div>
+</section><section class="card" id="presupuesto-integral-5">
+<h2>🧾 Presupuesto completo — 5 adultos</h2>
+<p class="small">Incluye transporte, alimentación, tiquetes/entradas, vuelos, hospedajes, tours y traslados privados. Los importes <b>pendientes</b> requieren tus valores reales: no se inventan precios de reservas. Los estimados son de planificación y se pueden editar.</p>
+<div class="grid2">
+<div class="kpi"><b>Personas</b><div>5 adultos</div></div>
+<div class="kpi"><b>Rubros sin cotizar</b><div id="pendientesPresupuesto">—</div></div>
+</div>
+<div class="budgetbox"><b>Costos de reserva / planificación</b>
+<p class="small">Escribe el <b>importe total de los cinco viajeros</b> en yenes (no por persona). Si pagaste en COP, divide los pesos por la TRM editable al inicio. Un valor 0 significa «pendiente», no «gratis».</p>
+<div id="listaCostosIntegrales"></div>
+<button class="btn ok" onclick="cargarPresupuestoIntegral5()">Aplicar presupuesto integral para 5 adultos</button>
+<button class="btn alt" onclick="guardarCostosIntegrales()">Guardar importes sin aplicar</button>
+<p class="small" id="estadoPresupuestoIntegral">Los gastos y presupuestos ya guardados no se borran. Aplicar actualiza solo los rubros planificados de esta sección y el transporte base de 5 adultos, previa confirmación.</p>
+</div>
+<div class="budgetbox">
+<b>Cómo se evita contar dos veces</b>
+<p class="small">Los Shinkansen a Jomo-Kogen y Kioto, y el autobús de Gotemba, ya están en <b>Transporte</b>. No vuelvas a ponerlos en «Tiquetes y entradas». Los traslados Klook, vuelos y excursiones solo se cargan si introduces sus importes aquí. Si una comida está incluida en un ryokan o tour, ajusta el presupuesto de alimentación de ese día.</p>
+</div>
 </section>
-
 <section class="card">
 <h2>💰 Presupuesto del día</h2>
 <div class="grid2">
@@ -87,7 +105,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{border-bottom:1px
 <option>Suvenirs</option>
 <option>Compras</option>
 <option>Otros</option>
-</select>
+<option>Hospedaje</option><option>Tiquetes y entradas</option><option>Vuelos</option><option>Tours y excursiones</option></select>
 </div>
 <div>
 <label>Subcategoría</label>
@@ -141,7 +159,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{border-bottom:1px
 <option>Suvenirs</option>
 <option>Compras</option>
 <option>Otros</option>
-</select>
+<option>Hospedaje</option><option>Tiquetes y entradas</option><option>Vuelos</option><option>Tours y excursiones</option></select>
 </div>
 <div>
 <label>Subcategoría</label>
@@ -151,19 +169,66 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{border-bottom:1px
 <label>Concepto</label>
 <input id="concepto" placeholder="Ej: Taxi Chureito a Lago Kawaguchi" type="text"/>
 <div class="grid2">
+<div><label>Moneda en que se pagó</label>
+<select id="monedaGasto" onchange="actualizarMonedaGasto()"><option value="JPY">Yenes (JPY)</option><option value="COP">Pesos colombianos (COP)</option></select></div>
+<div><label>Fondo / dinero utilizado</label>
+<select id="fondoGasto"><option value="">Sin asignar</option></select></div>
+</div>
+<div id="bloqueTasaBancoGasto">
+<label>Tasa efectiva del banco (COP por ¥1) — opcional</label>
+<input id="tasaBancoGasto" type="number" min="0" step="any" placeholder="Vacío = tasa del día" oninput="calcularCOP()"/>
+<span class="small">Si el banco cobró una tasa distinta, escríbela aquí. No modifica la tasa de los demás gastos.</span>
+</div>
+<div class="grid2">
 <div>
-<label>Valor ¥</label>
-<input id="valorYen" oninput="calcularCOP()" placeholder="Ej: 2500" type="number"/>
+<label id="etiquetaValorGasto">Importe pagado ¥</label>
+<input id="valorYen" oninput="calcularCOP()" min="0" step="any" placeholder="Ej: 2500" type="number"/>
 </div>
 <div>
-<label>Valor COP</label>
+<label>Equivalente COP</label>
 <input id="valorCOP" readonly="" type="number"/>
 </div>
 </div>
+<div class="small" id="equivalenteYenesGasto"></div>
 <label>Notas</label>
 <textarea id="notas" placeholder="Opcional"></textarea>
 <button class="btn ok" onclick="agregarGasto()">Guardar gasto</button>
 <button class="btn alt" onclick="limpiarFormulario()">Limpiar</button>
+</section>
+<section class="card" id="ingresos-fondos">
+<h2>💵 Ingresos y fondos disponibles</h2>
+<p class="small">Registra con qué dinero financiarás el viaje: ahorros, aportes, ingresos u otros recursos. «Disponible» cuenta para el saldo actual; «Previsto» se muestra aparte. No registres transferencias entre tus cuentas como ingresos nuevos ni cupos de tarjeta de crédito como efectivo.</p>
+<div class="grid2">
+<div><label>Fecha del ingreso</label><input id="fechaIngreso" type="date"/></div>
+<div><label>Estado del dinero</label><select id="estadoIngreso"><option value="Disponible">Disponible / recibido</option><option value="Previsto">Previsto / por recibir</option></select></div>
+</div>
+<label>Origen / concepto del ingreso</label>
+<input id="conceptoIngreso" placeholder="Ej: Ahorros del viaje, aporte familiar" type="text"/>
+<label>Fondo o cuenta de destino (nombre libre)</label>
+<input id="fondoIngreso" list="fondosSugeridos" placeholder="Ej: Cuenta Bancolombia, Efectivo JPY" type="text"/>
+<datalist id="fondosSugeridos"><option value="Cuenta bancaria COP"></option><option value="Efectivo COP"></option><option value="Efectivo JPY"></option><option value="Tarjeta prepago"></option></datalist>
+<div class="grid2">
+<div><label>Moneda recibida</label><select id="monedaIngreso" onchange="actualizarMonedaIngreso()"><option value="COP">Pesos (COP)</option><option value="JPY">Yenes (JPY)</option></select></div>
+<div><label id="etiquetaValorIngreso">Importe recibido COP</label><input id="valorIngreso" type="number" min="0" step="any" placeholder="Ej: 1000000" oninput="calcularIngreso()"/></div>
+</div>
+<div id="bloqueTasaBancoIngreso" style="display:none"><label>Tasa efectiva de cambio (COP por ¥1) — opcional</label><input id="tasaBancoIngreso" type="number" min="0" step="any" placeholder="Vacío = tasa del día" oninput="calcularIngreso()"/></div>
+<div class="small" id="equivalenteIngreso"></div>
+<button class="btn ok" onclick="agregarIngreso()">Guardar ingreso</button>
+<h3>Recursos para pagar el viaje</h3>
+<div class="grid2">
+<div class="kpi"><b>Ingresos disponibles COP</b><div id="totalIngresosDisponibles">$0</div></div>
+<div class="kpi"><b>Ingresos previstos COP</b><div id="totalIngresosPrevistos">$0</div></div>
+<div class="kpi"><b>Gastos pagados COP</b><div id="gastosFinanciadosCOP">$0</div></div>
+<div class="kpi"><b>Saldo disponible COP</b><div id="saldoFondosCOP">$0</div></div>
+<div class="kpi"><b>Por financiar del presupuesto COP</b><div id="faltanteFinanciacion">$0</div></div>
+<div class="kpi"><b>Recursos vs presupuesto COP</b><div id="coberturaPresupuesto">$0</div></div>
+</div>
+<p class="small">La cobertura compara recursos disponibles + previstos con el presupuesto total del viaje. Los gastos ya registrados no se descuentan otra vez del presupuesto. Los rubros pendientes de cotización aún no están incluidos.</p>
+<h3>Saldo por fondo / cuenta</h3>
+<div id="resumenFondos"></div>
+<h3>Ingresos registrados</h3>
+<div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Origen</th><th>Fondo</th><th>Estado</th><th>Moneda</th><th>Importe</th><th>COP</th><th></th></tr></thead><tbody id="tablaIngresos"></tbody></table></div>
+<button class="btn warn" onclick="exportarIngresosCSV()">Exportar ingresos CSV</button>
 </section>
 <section class="card">
 <h2>📊 Dashboard viaje</h2>
@@ -207,11 +272,10 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{border-bottom:1px
 <h2>👤 Arqueo por pagado por</h2>
 <div id="resumenPagadoPor"></div>
 </section>
-
 <section class="card" id="backup-presupuesto">
 <h2>🛡️ Copia de seguridad</h2>
 <div class="backupbox">
-<p class="small">El presupuesto y los gastos se guardan en el navegador. Para que no vuelva a perderse, exporta periódicamente una copia JSON. La copia incluye gastos, presupuestos y TRM.</p>
+<p class="small">El presupuesto y los gastos se guardan en el navegador. Para que no vuelva a perderse, exporta periódicamente una copia JSON. La copia incluye gastos, ingresos, presupuestos y tasas de cambio por fecha y transacción.</p>
 <button class="btn warn" onclick="exportarBackupJSON()">⬇️ Exportar respaldo JSON</button>
 <label>Restaurar respaldo</label>
 <input accept=".json,application/json" id="archivoBackup" onchange="importarBackupJSON(event)" type="file"/>
@@ -222,7 +286,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{border-bottom:1px
 <div style="overflow-x:auto">
 <table>
 <thead>
-<tr><th>Fecha</th><th>Hora</th><th>Pagó</th><th>Medio</th><th>Categoría</th><th>Subcat.</th><th>Concepto</th><th>¥</th><th>COP</th><th></th></tr>
+<tr><th>Fecha</th><th>Hora</th><th>Pagó</th><th>Medio</th><th>Fondo</th><th>Categoría</th><th>Subcat.</th><th>Concepto</th><th>Moneda</th><th>Importe original</th><th>Tasa efectiva</th><th>¥ equiv.</th><th>COP real</th><th></th></tr>
 </thead>
 <tbody id="tabla"></tbody>
 </table>
@@ -243,7 +307,11 @@ const subcats={
 "Entradas turísticas":["Templo","Museo","Disney","Onsen","Tour","Otro"],
 "Suvenirs":["Anime","Templo","Dulces","Regalos","Otro"],
 "Compras":["Ropa","Zapatos","Cosmética","Anime","Tecnología","Otros"],
-"Otros":["Lavandería","Emergencia","Otro"]
+"Otros":["Lavandería","Emergencia","Imprevistos","Otro"],
+"Hospedaje":["Airbnb Tokio","Ryokan Takaragawa","Airbnb Kioto","Otro"],
+"Tiquetes y entradas":["DisneySea","Gion Corner","Ueno Zoo","Ueno Toshogu","Samurai Museum","Otros"],
+"Vuelos":["Vuelos internacionales","Equipaje extra","Otro"],
+"Tours y excursiones":["Fuji","Traslado Klook","Otro"]
 };
 
 const FECHAS_VIAJE = Array.from({length:15},(_,i)=>`2026-12-${String(15+i).padStart(2,"0")}`);
@@ -251,7 +319,20 @@ const FECHAS_VIAJE = Array.from({length:15},(_,i)=>`2026-12-${String(15+i).padSt
 function hoyISO(){return new Date().toISOString().slice(0,10);}
 function yen(n){return "¥"+Math.round(Number(n||0)).toLocaleString("ja-JP");}
 function cop(n){return "$"+Math.round(Number(n||0)).toLocaleString("es-CO");}
-function getTRM(){return Number(localStorage.getItem("jp_trm")||document.getElementById("trm").value||30);}
+function tasaBase(){return Number(localStorage.getItem("jp_trm")||30)||30;}
+function tasaDia(fecha){const v=Number(localStorage.getItem("jp_trm_dia_"+fecha));return v>0?v:tasaBase();}
+function getTRM(){return tasaDia(fechaActual());}
+function mostrarTasaDia(){document.getElementById("trm").value=tasaDia(fechaActual());}
+function redondearCOP(n){return Math.round((Number(n)||0)*100)/100;}
+function fmtImporte(n,moneda){return (moneda==='COP'?cop(n):yen(n));}
+function escapeHTML(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function importeConvertido(importe,moneda,tasa){
+  const v=Number(importe),t=Number(tasa);
+  if(!Number.isFinite(v)||v<=0||!Number.isFinite(t)||t<=0) return null;
+  return moneda==='COP'?{yen:v/t,cop:v}:{yen:v,cop:v*t};
+}
+function ingresos(){try{const a=JSON.parse(localStorage.getItem('jp_ingresos')||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
+function setIngresos(a){localStorage.setItem('jp_ingresos',JSON.stringify(a));}
 function gastos(){return JSON.parse(localStorage.getItem("jp_gastos")||"[]");}
 function setGastos(a){localStorage.setItem("jp_gastos",JSON.stringify(a));}
 function fechaActual(){return document.getElementById("fecha").value;}
@@ -299,7 +380,11 @@ function totalPresupuestoFecha(fecha){
   return getPresupuestoLista(fecha).reduce((s,x)=>s+Number(x.valor||0),0);
 }
 
-function guardarTRM(){localStorage.setItem("jp_trm",document.getElementById("trm").value||30);}
+function guardarTRM(){
+  const v=Number(document.getElementById('trm').value);
+  if(!Number.isFinite(v)||v<=0) return;
+  localStorage.setItem('jp_trm_dia_'+fechaActual(),String(v));
+}
 
 function actualizarSubcategoria(){
   const cat=document.getElementById("categoria").value;
@@ -360,28 +445,120 @@ function eliminarPresupuestoRubro(i){
   render();
 }
 
+function actualizarMonedaGasto(){
+  const jpy=document.getElementById('monedaGasto').value==='JPY';
+  document.getElementById('etiquetaValorGasto').textContent=jpy?'Importe pagado ¥':'Importe pagado COP';
+  document.getElementById('bloqueTasaBancoGasto').style.display=jpy?'':'none';
+  calcularCOP();
+}
+function tasaEfectivaGasto(){
+  const banco=Number(document.getElementById('tasaBancoGasto').value);
+  return document.getElementById('monedaGasto').value==='JPY' && banco>0?banco:getTRM();
+}
 function calcularCOP(){
-  let v=Number(document.getElementById("valorYen").value||0);
-  document.getElementById("valorCOP").value=Math.round(v*getTRM());
+  const moneda=document.getElementById('monedaGasto').value;
+  const v=Number(document.getElementById('valorYen').value||0);
+  const convertido=importeConvertido(v,moneda,tasaEfectivaGasto());
+  document.getElementById('valorCOP').value=convertido?redondearCOP(convertido.cop):'';
+  document.getElementById('equivalenteYenesGasto').textContent=convertido?
+    `Equivalente: ${yen(convertido.yen)} · Tasa aplicada: ${tasaEfectivaGasto()} COP/¥`:
+    'La conversión se calculará al introducir un importe.';
+}
+function actualizarMonedaIngreso(){
+  const jpy=document.getElementById('monedaIngreso').value==='JPY';
+  document.getElementById('etiquetaValorIngreso').textContent=jpy?'Importe recibido ¥':'Importe recibido COP';
+  document.getElementById('bloqueTasaBancoIngreso').style.display=jpy?'':'none';
+  calcularIngreso();
+}
+function tasaEfectivaIngreso(){const b=Number(document.getElementById('tasaBancoIngreso').value);return document.getElementById('monedaIngreso').value==='JPY'&&b>0?b:getTRM();}
+function calcularIngreso(){
+  const c=importeConvertido(document.getElementById('valorIngreso').value,document.getElementById('monedaIngreso').value,tasaEfectivaIngreso());
+  document.getElementById('equivalenteIngreso').textContent=c?`Equivalente ${yen(c.yen)} · ${cop(c.cop)} · Tasa ${tasaEfectivaIngreso()} COP/¥`:'';
+}
+function actualizarFondosGasto(){
+  const select=document.getElementById('fondoGasto');
+  const anterior=select.value;
+  const fondos=[...new Set(ingresos().map(x=>x.fondo).filter(Boolean))].sort();
+  select.innerHTML='<option value="">Sin asignar</option>';
+  fondos.forEach(f=>{const o=document.createElement('option');o.value=f;o.textContent=f;select.appendChild(o);});
+  if(fondos.includes(anterior)) select.value=anterior;
+}
+function agregarIngreso(){
+  const fecha=document.getElementById('fechaIngreso').value;
+  const concepto=document.getElementById('conceptoIngreso').value.trim();
+  const fondo=document.getElementById('fondoIngreso').value.trim();
+  const moneda=document.getElementById('monedaIngreso').value;
+  const valor=Number(document.getElementById('valorIngreso').value);
+  const tasa=tasaEfectivaIngreso();
+  const c=importeConvertido(valor,moneda,tasa);
+  if(!fecha||!concepto||!fondo||!c){alert('Completa fecha, concepto, fondo e importe positivo; revisa la tasa de cambio.');return;}
+  const a=ingresos();a.push({fecha,concepto,fondo,estado:document.getElementById('estadoIngreso').value,monedaOriginal:moneda,valorOriginal:valor,trm:tasa,valorYen:c.yen,valorCOP:redondearCOP(c.cop)});
+  setIngresos(a);
+  document.getElementById('conceptoIngreso').value='';document.getElementById('valorIngreso').value='';document.getElementById('tasaBancoIngreso').value='';
+  actualizarFondosGasto();calcularIngreso();render();
+}
+function eliminarIngreso(i){if(!confirm('¿Eliminar este ingreso?'))return;const a=ingresos();a.splice(i,1);setIngresos(a);actualizarFondosGasto();render();}
+function renderIngresos(arrGastos){
+  const a=ingresos();
+  const disponibles=a.filter(x=>x.estado==='Disponible').reduce((s,x)=>s+Number(x.valorCOP||0),0);
+  const previstos=a.filter(x=>x.estado==='Previsto').reduce((s,x)=>s+Number(x.valorCOP||0),0);
+  const gastosCOP=arrGastos.reduce((s,x)=>s+Number(x.valorCOP||0),0);
+  document.getElementById('totalIngresosDisponibles').textContent=cop(disponibles);
+  document.getElementById('totalIngresosPrevistos').textContent=cop(previstos);
+  document.getElementById('gastosFinanciadosCOP').textContent=cop(gastosCOP);
+  document.getElementById('saldoFondosCOP').textContent=cop(disponibles-gastosCOP);
+  document.getElementById('saldoFondosCOP').className=disponibles-gastosCOP<0?'over':'under';
+  const presupuestoCOP=fechasConPresupuesto().reduce((s,f)=>s+totalPresupuestoFecha(f)*tasaDia(f),0);
+  const cobertura=disponibles+previstos-presupuestoCOP;
+  document.getElementById('faltanteFinanciacion').textContent=cop(Math.max(0,-cobertura));
+  document.getElementById('coberturaPresupuesto').textContent=cop(cobertura);
+  document.getElementById('coberturaPresupuesto').className=cobertura<0?'over':'under';
+  const fondos=[...new Set([...a.map(x=>x.fondo),...arrGastos.map(x=>x.fondo).filter(Boolean)])].sort();
+  document.getElementById('resumenFondos').innerHTML=fondos.length?fondos.map(f=>{
+    const inc=a.filter(x=>x.fondo===f&&x.estado==='Disponible').reduce((s,x)=>s+Number(x.valorCOP||0),0);
+    const prev=a.filter(x=>x.fondo===f&&x.estado==='Previsto').reduce((s,x)=>s+Number(x.valorCOP||0),0);
+    const pag=arrGastos.filter(x=>x.fondo===f).reduce((s,x)=>s+Number(x.valorCOP||0),0);
+    return `<div class="row"><div><b>${escapeHTML(f)}</b><br><span class="small">Disponible ${cop(inc)} · Previsto ${cop(prev)} · Gastado ${cop(pag)}</span></div><b class="${inc-pag<0?'over':'under'}">${cop(inc-pag)}</b></div>`;
+  }).join(''):'<p class="mut">Registra un ingreso para crear tus fondos.</p>';
+  const sinAsignar=arrGastos.filter(x=>!x.fondo).reduce((s,x)=>s+Number(x.valorCOP||0),0);
+  if(sinAsignar)document.getElementById('resumenFondos').innerHTML+=`<p class="small">Gastos sin fondo asignado: ${cop(sinAsignar)}. Se descuentan del saldo global, pero no de una cuenta específica.</p>`;
+  document.getElementById('tablaIngresos').innerHTML=a.map((x,i)=>`<tr><td>${escapeHTML(x.fecha)}</td><td>${escapeHTML(x.concepto)}</td><td>${escapeHTML(x.fondo)}</td><td>${escapeHTML(x.estado)}</td><td>${escapeHTML(x.monedaOriginal)}</td><td>${fmtImporte(x.valorOriginal,x.monedaOriginal)}</td><td>${cop(x.valorCOP)}</td><td><button class="btn red" onclick="eliminarIngreso(${i})">X</button></td></tr>`).join('');
+}
+function exportarIngresosCSV(){
+  const rows=[['Fecha','Origen','Fondo','Estado','Moneda original','Importe original','Tasa COP por JPY','Equivalente JPY','Equivalente COP']];
+  ingresos().forEach(x=>rows.push([x.fecha,x.concepto,x.fondo,x.estado,x.monedaOriginal,x.valorOriginal,x.trm,x.valorYen,x.valorCOP]));
+  descargarCSV(rows,'ingresos_japon_2026.csv');
+}
+function descargarCSV(rows,nombre){
+  const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=nombre;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
 function agregarGasto(){
   const concepto=document.getElementById("concepto").value.trim();
-  const yenes=Number(document.getElementById("valorYen").value||0);
-  if(!concepto||!yenes){alert("Falta concepto o valor en yenes.");return;}
+  const moneda=document.getElementById('monedaGasto').value;
+  const valorOriginal=Number(document.getElementById('valorYen').value);
+  const tasa=tasaEfectivaGasto();
+  const c=importeConvertido(valorOriginal,moneda,tasa);
+  if(!concepto||!c){alert('Falta concepto o importe positivo, o la tasa de cambio no es válida.');return;}
 
   const now=new Date();
   const item={
     fecha:fechaActual(),
     hora:String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0"),
-    trm:getTRM(),
+    trm:tasa,
+    trmDia:getTRM(),
+    trmBanco:moneda==='JPY'&&Number(document.getElementById('tasaBancoGasto').value)>0?Number(document.getElementById('tasaBancoGasto').value):null,
+    monedaOriginal:moneda,
+    valorOriginal,
+    fondo:document.getElementById('fondoGasto').value,
     pagadoPor:document.getElementById("pagadoPor").value,
     medioPago:document.getElementById("medioPago").value,
     categoria:document.getElementById("categoria").value,
     subcategoria:document.getElementById("subcategoria").value,
     concepto,
-    valorYen:yenes,
-    valorCOP:Math.round(yenes*getTRM()),
+    valorYen:c.yen,
+    valorCOP:redondearCOP(c.cop),
     notas:document.getElementById("notas").value.trim()
   };
 
@@ -393,20 +570,22 @@ function limpiarFormulario(){
   document.getElementById("concepto").value="";
   document.getElementById("valorYen").value="";
   document.getElementById("valorCOP").value="";
+  document.getElementById('tasaBancoGasto').value='';
+  document.getElementById('equivalenteYenesGasto').textContent='';
   document.getElementById("notas").value="";
 }
 
 function groupBy(arr,key){
   let out={};
-  arr.forEach(x=>{out[x[key]]=(out[x[key]]||0)+Number(x.valorYen);});
+  arr.forEach(x=>{const k=x[key]||'Sin asignar';if(!out[k])out[k]={jpy:0,cop:0};out[k].jpy+=Number(x.valorYen||0);out[k].cop+=Number(x.valorCOP||0);});
   return out;
 }
 
 function renderGroup(obj,elid){
   const el=document.getElementById(elid);
-  const entries=Object.entries(obj).sort((a,b)=>b[1]-a[1]);
+  const entries=Object.entries(obj).sort((a,b)=>b[1].cop-a[1].cop);
   el.innerHTML=entries.length
-    ?entries.map(([k,v])=>`<div class="row"><div>${k}</div><b>${yen(v)}<br><span class="small">${cop(v*getTRM())}</span></b></div>`).join("")
+    ?entries.map(([k,v])=>`<div class="row"><div>${escapeHTML(k)}</div><b>${yen(v.jpy)}<br><span class="small">${cop(v.cop)}</span></b></div>`).join("")
     :"<p class='mut'>Sin datos.</p>";
 }
 
@@ -520,9 +699,9 @@ function render(){
   const pct=presupuestoViaje>0?(total/presupuestoViaje)*100:0;
 
   document.getElementById("presupuestoViajeYen").textContent=yen(presupuestoViaje);
-  document.getElementById("presupuestoViajeCOP").textContent=cop(presupuestoViaje*getTRM());
+  document.getElementById("presupuestoViajeCOP").textContent=cop(fechasConPresupuesto().reduce((s,f)=>s+totalPresupuestoFecha(f)*tasaDia(f),0));
   document.getElementById("totalYen").textContent=yen(total);
-  document.getElementById("totalCOP").textContent=cop(total*getTRM());
+  document.getElementById("totalCOP").textContent=cop(arr.reduce((s,x)=>s+Number(x.valorCOP||0),0));
   document.getElementById("saldoViajeYen").textContent=yen(saldoViaje);
   document.getElementById("saldoViajeYen").className=saldoViaje<0?"over":"under";
   document.getElementById("pctViaje").textContent=(Math.round(pct*10)/10)+"%";
@@ -530,7 +709,7 @@ function render(){
 
   document.getElementById("presupuestoDiaKPI").textContent=yen(presupuestoDia);
   document.getElementById("totalDiaYen").textContent=yen(totalDia);
-  document.getElementById("totalDiaCOP").textContent=cop(totalDia*getTRM());
+  document.getElementById("totalDiaCOP").textContent=cop(arr.filter(x=>x.fecha===fecha).reduce((s,x)=>s+Number(x.valorCOP||0),0));
   document.getElementById("difDia").textContent=yen(dif);
   document.getElementById("difDia").className=dif<0?"over":"under";
 
@@ -540,11 +719,13 @@ function render(){
   renderGroup(groupBy(arr,"categoria"),"resumenCategorias");
   renderGroup(groupBy(arr,"medioPago"),"resumenMedios");
   renderGroup(groupBy(arr,"pagadoPor"),"resumenPagadoPor");
+  renderIngresos(arr);
 
   document.getElementById("tabla").innerHTML=arr.map((x,i)=>`
   <tr>
-  <td>${x.fecha}</td><td>${x.hora}</td><td>${x.pagadoPor}</td><td>${x.medioPago}</td>
-  <td>${x.categoria}</td><td>${x.subcategoria}</td><td>${x.concepto}${x.notas?'<br><span class="mut">'+x.notas+'</span>':''}</td>
+  <td>${escapeHTML(x.fecha)}</td><td>${escapeHTML(x.hora)}</td><td>${escapeHTML(x.pagadoPor)}</td><td>${escapeHTML(x.medioPago)}</td><td>${escapeHTML(x.fondo||'Sin asignar')}</td>
+  <td>${escapeHTML(x.categoria)}</td><td>${escapeHTML(x.subcategoria)}</td><td>${escapeHTML(x.concepto)}${x.notas?'<br><span class="mut">'+escapeHTML(x.notas)+'</span>':''}</td>
+  <td>${escapeHTML(x.monedaOriginal||'JPY')}</td><td>${fmtImporte(x.valorOriginal??x.valorYen,x.monedaOriginal||'JPY')}</td><td>${Number(x.trm||0).toLocaleString('es-CO',{maximumFractionDigits:6})}</td>
   <td>${yen(x.valorYen)}</td><td>${cop(x.valorCOP)}</td>
   <td><button class="btn red" onclick="eliminar(${i})">X</button></td>
   </tr>`).join("");
@@ -578,8 +759,8 @@ function borrarPresupuestos(){
 }
 
 function exportarCSV(){
-  const rows=[["Fecha","Hora","TRM","Pagado por","Medio de pago","Categoria","Subcategoria","Concepto","Valor JPY","Valor COP","Notas"]];
-  gastos().forEach(x=>rows.push([x.fecha,x.hora,x.trm,x.pagadoPor,x.medioPago,x.categoria,x.subcategoria,x.concepto,x.valorYen,x.valorCOP,x.notas]));
+  const rows=[["Fecha","Hora","Tasa COP por JPY","Pagado por","Medio de pago","Fondo","Categoria","Subcategoria","Concepto","Moneda original","Valor original","Valor JPY","Valor COP","Notas"]];
+  gastos().forEach(x=>rows.push([x.fecha,x.hora,x.trm,x.pagadoPor,x.medioPago,x.fondo||'',x.categoria,x.subcategoria,x.concepto,x.monedaOriginal||'JPY',x.valorOriginal??x.valorYen,x.valorYen,x.valorCOP,x.notas]));
   const csv=rows.map(r=>r.map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(",")).join("\n");
   const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});
   const url=URL.createObjectURL(blob);
@@ -588,7 +769,7 @@ function exportarCSV(){
 }
 
 
-const BASE_TRANSPORTE_2026 = [{"fecha": "2026-12-15", "pp": 0, "nota": "Haneda → Airbnb: Klook van ya separada; no duplicar"}, {"fecha": "2026-12-16", "pp": 1200, "nota": "Sumida → Asakusa → Ueno/Ameyoko → Aomi → Sumida"}, {"fecha": "2026-12-17", "pp": 6500, "nota": "Tokyo → Jomo-Kogen en Joetsu Shinkansen + conexión urbana; shuttle ryokan aparte/incluido según reserva"}, {"fecha": "2026-12-18", "pp": 0, "nota": "Takaragawa Onsen: día de descanso"}, {"fecha": "2026-12-19", "pp": 6500, "nota": "Jomo-Kogen → Tokyo + transporte urbano / Kappabashi opcional"}, {"fecha": "2026-12-20", "pp": 2500, "nota": "Gotokuji → Ausgang → Nezu → Yanaka → Tateishi → Sumida"}, {"fecha": "2026-12-21", "pp": 500, "nota": "Airbnb ↔ Tokyo Station; excursión Fuji se controla aparte"}, {"fecha": "2026-12-22", "pp": 1500, "nota": "Sumida ↔ Tokyo DisneySea"}, {"fecha": "2026-12-23", "pp": 1000, "nota": "Sailor Moon → Ikebukuro → Nakano → Shinjuku; candidato Tokyo Subway Ticket 24 h"}, {"fecha": "2026-12-24", "pp": 15200, "nota": "Tokyo → Kyoto Nozomi + conexiones urbanas"}, {"fecha": "2026-12-25", "pp": 16000, "nota": "Kyoto local + Kyoto → Tokyo Nozomi + conexiones"}, {"fecha": "2026-12-26", "pp": 1200, "nota": "Ueno Zoo → Ameyoko → Samurai Museum/Shinjuku → Sumida"}, {"fecha": "2026-12-27", "pp": 4800, "nota": "Transporte urbano + bus ida/vuelta Gotemba Premium Outlets"}, {"fecha": "2026-12-28", "pp": 800, "nota": "Sumida → Harajuku → Shibuya → Sumida"}, {"fecha": "2026-12-29", "pp": 500, "nota": "Compras locales; van Klook 18:30 ya separada"}];
+const BASE_TRANSPORTE_2026 = [{"fecha": "2026-12-15", "pp": 0, "nota": "Haneda → Airbnb: Klook van ya separada; no duplicar"}, {"fecha": "2026-12-16", "pp": 1200, "nota": "Sumida → Asakusa → Ueno/Ameyoko → Aomi → Sumida"}, {"fecha": "2026-12-17", "pp": 6500, "nota": "Tokyo → Jomo-Kogen en Joetsu Shinkansen + conexión urbana; shuttle ryokan aparte/incluido según reserva"}, {"fecha": "2026-12-18", "pp": 0, "nota": "Takaragawa Onsen: día de descanso"}, {"fecha": "2026-12-19", "pp": 6500, "nota": "Jomo-Kogen → Tokyo + transporte urbano / almuerzo en Tokyo Station"}, {"fecha": "2026-12-20", "pp": 2500, "nota": "Gotokuji → Hachioji (Eco Town + Yoshinoya) → Nezu → Yanaka → Sumida"}, {"fecha": "2026-12-21", "pp": 500, "nota": "Airbnb ↔ Tokyo Station; excursión Fuji se controla aparte"}, {"fecha": "2026-12-22", "pp": 1500, "nota": "Sumida ↔ Tokyo DisneySea"}, {"fecha": "2026-12-23", "pp": 1000, "nota": "Sailor Moon → Ikebukuro → Nakano → Shinjuku; candidato Tokyo Subway Ticket 24 h"}, {"fecha": "2026-12-24", "pp": 15200, "nota": "Tokyo → Kyoto Nozomi + conexiones urbanas"}, {"fecha": "2026-12-25", "pp": 16000, "nota": "Kyoto local + Kyoto → Tokyo Nozomi + conexiones"}, {"fecha": "2026-12-26", "pp": 1200, "nota": "Ueno Zoo → Ameyoko → Samurai Museum/Shinjuku → Sumida"}, {"fecha": "2026-12-27", "pp": 4800, "nota": "Transporte urbano + bus ida/vuelta Gotemba Premium Outlets"}, {"fecha": "2026-12-28", "pp": 800, "nota": "Sumida → Harajuku → Shibuya → Sumida"}, {"fecha": "2026-12-29", "pp": 500, "nota": "Compras locales; van Klook 18:30 ya separada"}];
 
 function cargarBaseTransporte(personas){
   if(!confirm(`¿Cargar el presupuesto base de transporte para ${personas} persona(s)? Se actualizará solo el rubro Transporte/General de cada fecha; no borra otros presupuestos.`)) return;
@@ -611,7 +792,7 @@ function cargarBaseTransporte(personas){
 }
 
 function exportarBackupJSON(){
-  const data={version:"JP-2026-v5",exportado:new Date().toISOString(),storage:{}};
+  const data={version:"JP-2026-v6",exportado:new Date().toISOString(),storage:{}};
   for(let i=0;i<localStorage.length;i++){
     const k=localStorage.key(i);
     if(k && (k.startsWith("jp_"))) data.storage[k]=localStorage.getItem(k);
@@ -645,10 +826,14 @@ function importarBackupJSON(event){
 }
 
 document.getElementById("fecha").value=localStorage.getItem("jp_fecha")||hoyISO();
-document.getElementById("trm").value=localStorage.getItem("jp_trm")||30;
+mostrarTasaDia();
+document.getElementById('fechaIngreso').value=fechaActual();
+actualizarMonedaGasto();actualizarMonedaIngreso();actualizarFondosGasto();
 
 document.getElementById("fecha").addEventListener("change",()=>{
   localStorage.setItem("jp_fecha",fechaActual());
+  mostrarTasaDia();
+  calcularCOP();calcularIngreso();
   cargarPresupuestoFecha();
   render();
 });
@@ -657,6 +842,67 @@ actualizarSubcategoria();
 actualizarSubcategoriaPresupuesto();
 cargarPresupuestoFecha();
 render();
+
+
+// PRESUPUESTO INTEGRAL 2026: las reservas sin precio confirmado permanecen pendientes.
+const PLAN_INTEGRAL_5 = [{"fecha": "2026-12-15", "categoria": "Vuelos", "subcategoria": "Vuelos internacionales", "concepto": "Tiquetes aéreos internacionales ida y vuelta (5 personas)", "valor": 0, "nota": "Pendiente: total pagado en tiquetes"}, {"fecha": "2026-12-15", "categoria": "Hospedaje", "subcategoria": "Airbnb Tokio", "concepto": "Airbnb Tokio: noches 15–16, 19–23 y 25–28 dic (11 noches)", "valor": 0, "nota": "Pendiente: importe total reserva Tokio, 5 adultos"}, {"fecha": "2026-12-17", "categoria": "Hospedaje", "subcategoria": "Ryokan Takaragawa", "concepto": "Ryokan Takaragawa Onsen: noches 17 y 18 dic (2 noches)", "valor": 0, "nota": "Pendiente: confirmar si incluye desayunos y cenas"}, {"fecha": "2026-12-24", "categoria": "Hospedaje", "subcategoria": "Airbnb Kioto", "concepto": "Airbnb Kioto: noche del 24 dic (1 noche)", "valor": 0, "nota": "Pendiente: importe total reserva Kioto"}, {"fecha": "2026-12-15", "categoria": "Tours y excursiones", "subcategoria": "Traslado Klook", "concepto": "Van Klook Haneda → Airbnb Tokio, 15 dic", "valor": 0, "nota": "Pendiente: costo contratado"}, {"fecha": "2026-12-29", "categoria": "Tours y excursiones", "subcategoria": "Traslado Klook", "concepto": "Van Klook Airbnb Tokio → Haneda, 29 dic 18:30", "valor": 0, "nota": "Pendiente: costo contratado"}, {"fecha": "2026-12-21", "categoria": "Tours y excursiones", "subcategoria": "Fuji", "concepto": "Excursión al Fuji, 21 dic, 5 adultos", "valor": 0, "nota": "Pendiente: costo contratado; sin duplicar transporte local"}, {"fecha": "2026-12-22", "categoria": "Tiquetes y entradas", "subcategoria": "DisneySea", "concepto": "Tokyo DisneySea, 22 dic, 5 adultos", "valor": 50000, "nota": "Estimación ¥10.000 por adulto; sustituir por precio real"}, {"fecha": "2026-12-24", "categoria": "Tiquetes y entradas", "subcategoria": "Gion Corner", "concepto": "Gion Corner, 24 dic 19:00, 5 adultos", "valor": 27500, "nota": "Estimación ¥5.500 por adulto; reserva confirmada, sustituir por precio real"}, {"fecha": "2026-12-26", "categoria": "Tiquetes y entradas", "subcategoria": "Ueno Zoo", "concepto": "Ueno Zoo, 26 dic, 5 adultos", "valor": 3000, "nota": "Estimación ¥600 por adulto"}, {"fecha": "2026-12-26", "categoria": "Tiquetes y entradas", "subcategoria": "Ueno Toshogu", "concepto": "Ueno Toshogu: acceso de pago si aplica, 5 adultos", "valor": 0, "nota": "Pendiente: solo si se accede al área de pago"}, {"fecha": "2026-12-26", "categoria": "Tiquetes y entradas", "subcategoria": "Samurai Museum", "concepto": "Samurai Museum, 26 dic, 5 adultos", "valor": 16500, "nota": "Estimación ¥3.300 por adulto; verificar museo y precio"}, {"fecha": "2026-12-15", "categoria": "Alimentación", "subcategoria": "General 15 dic", "concepto": "Comidas 15 dic (llegada nocturna), 5 adultos", "valor": 8000, "nota": "Estimación editable"}, {"fecha": "2026-12-16", "categoria": "Alimentación", "subcategoria": "General 16 dic", "concepto": "Comidas 16 dic, 5 adultos", "valor": 20000, "nota": "Estimación editable"}, {"fecha": "2026-12-17", "categoria": "Alimentación", "subcategoria": "General 17 dic", "concepto": "Comidas 17 dic, 5 adultos", "valor": 5000, "nota": "Ryokan podría incluir cena"}, {"fecha": "2026-12-18", "categoria": "Alimentación", "subcategoria": "General 18 dic", "concepto": "Comidas 18 dic, 5 adultos", "valor": 5000, "nota": "Ryokan podría incluir desayuno/cena"}, {"fecha": "2026-12-19", "categoria": "Alimentación", "subcategoria": "General 19 dic", "concepto": "Comidas 19 dic, 5 adultos", "valor": 17500, "nota": "Incluye almuerzo GRANSTA Tokyo"}, {"fecha": "2026-12-20", "categoria": "Alimentación", "subcategoria": "General 20 dic", "concepto": "Comidas 20 dic, 5 adultos", "valor": 20000, "nota": "Incluye Yoshinoya"}, {"fecha": "2026-12-21", "categoria": "Alimentación", "subcategoria": "General 21 dic", "concepto": "Comidas 21 dic, 5 adultos", "valor": 20000, "nota": "Verificar comidas incluidas en tour"}, {"fecha": "2026-12-22", "categoria": "Alimentación", "subcategoria": "General 22 dic", "concepto": "Comidas 22 dic, 5 adultos", "valor": 25000, "nota": "DisneySea"}, {"fecha": "2026-12-23", "categoria": "Alimentación", "subcategoria": "General 23 dic", "concepto": "Comidas 23 dic, 5 adultos", "valor": 22500, "nota": "Estimación editable"}, {"fecha": "2026-12-24", "categoria": "Alimentación", "subcategoria": "General 24 dic", "concepto": "Comidas 24 dic, 5 adultos", "valor": 25000, "nota": "HIROSHIGE puede superar esta cifra; ajustar si lo eligen"}, {"fecha": "2026-12-25", "categoria": "Alimentación", "subcategoria": "General 25 dic", "concepto": "Comidas 25 dic, 5 adultos", "valor": 20000, "nota": "Estimación editable"}, {"fecha": "2026-12-26", "categoria": "Alimentación", "subcategoria": "General 26 dic", "concepto": "Comidas 26 dic, 5 adultos", "valor": 20000, "nota": "Estimación editable"}, {"fecha": "2026-12-27", "categoria": "Alimentación", "subcategoria": "General 27 dic", "concepto": "Comidas 27 dic, 5 adultos", "valor": 22500, "nota": "Gotemba"}, {"fecha": "2026-12-28", "categoria": "Alimentación", "subcategoria": "General 28 dic", "concepto": "Comidas 28 dic, 5 adultos", "valor": 30000, "nota": "MO-MO-PARADISE puede superar esta cifra; ajustar"}, {"fecha": "2026-12-29", "categoria": "Alimentación", "subcategoria": "General 29 dic", "concepto": "Comidas 29 dic, 5 adultos", "valor": 12000, "nota": "Almuerzo y cena ligera"}, {"fecha": "2026-12-15", "categoria": "Otros", "subcategoria": "Imprevistos", "concepto": "Fondo de contingencia de grupo", "valor": 30000, "nota": "Reserva orientativa; no confundir con gasto realizado"}];
+const PLAN_INTEGRAL_KEY = 'jp_plan_integral_5_v1';
+function planIntegralActual(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(PLAN_INTEGRAL_KEY)||'null');
+    if(Array.isArray(raw) && raw.length===PLAN_INTEGRAL_5.length) return raw;
+  }catch(e){}
+  return PLAN_INTEGRAL_5.map(x=>({...x}));
+}
+function mostrarCostosIntegrales(){
+  const plan=planIntegralActual();
+  const faltantes=plan.filter(x=>Number(x.valor||0)<=0);
+  document.getElementById('pendientesPresupuesto').textContent=String(faltantes.length);
+  const total=plan.reduce((s,x)=>s+Number(x.valor||0),0);
+  const trm=getTRM();
+  const table=plan.map((x,i)=>`<div class="row" style="grid-template-columns:1fr minmax(115px,135px)">
+    <div><b>${x.concepto}</b><br><span class="small">${x.fecha.slice(5)} · ${x.categoria} · ${x.nota}</span></div>
+    <div><input aria-label="Total yenes: ${x.concepto}" id="integralValor_${i}" type="number" min="0" step="1" value="${Number(x.valor||0)}" style="margin:0;padding:8px" />
+    <span class="small">¥ total grupo</span></div></div>`).join('');
+  document.getElementById('listaCostosIntegrales').innerHTML=`<p><b>Subtotal de estos rubros:</b> ${yen(total)} · ${cop(total*trm)}. <span class="small">Más transporte base: ¥291.000. Los pendientes no están incluidos.</span></p>`+table;
+}
+function guardarCostosIntegrales(silencioso=false){
+  const plan=planIntegralActual().map((x,i)=>({...x,valor:Math.max(0,Number(document.getElementById('integralValor_'+i).value||0))}));
+  localStorage.setItem(PLAN_INTEGRAL_KEY,JSON.stringify(plan));
+  mostrarCostosIntegrales();
+  if(!silencioso) alert('Importes guardados en este navegador. Para incluirlos en el dashboard, pulsa Aplicar presupuesto integral.');
+}
+function cargarPresupuestoIntegral5(){
+  guardarCostosIntegrales(true);
+  if(!confirm('¿Aplicar el presupuesto integral de 5 adultos? Se actualizan únicamente las partidas planificadas, sin borrar gastos reales ni otros rubros. Los importes pendientes (0) no se cargarán como gastos.')) return;
+  const plan=planIntegralActual();
+  // Preservar presupuestos que el usuario haya introducido manualmente y no sean partidas del plan.
+  BASE_TRANSPORTE_2026.forEach(x=>{
+    let lista=getPresupuestoLista(x.fecha);
+    const idx=lista.findIndex(r=>r.categoria==='Transporte' && r.subcategoria==='General');
+    const valor=Number(x.pp||0)*5;
+    if(valor>0){if(idx>=0)lista[idx].valor=valor;else lista.push({categoria:'Transporte',subcategoria:'General',valor});}
+    else if(idx>=0)lista.splice(idx,1);
+    setPresupuestoLista(x.fecha,lista);
+  });
+  plan.forEach(x=>{
+    let lista=getPresupuestoLista(x.fecha);
+    const idx=lista.findIndex(r=>r.categoria===x.categoria && r.subcategoria===x.subcategoria);
+    if(Number(x.valor)>0){
+      if(idx>=0){if(lista[idx].origenPlanIntegral)lista[idx].valor=Number(x.valor);} 
+      else lista.push({categoria:x.categoria,subcategoria:x.subcategoria,valor:Number(x.valor)});
+    } else if(idx>=0 && lista[idx].origenPlanIntegral){
+      lista.splice(idx,1);
+    }
+    // Mark only our own new entries for safer later deletion
+    if(idx<0 && Number(x.valor)>0)lista[lista.length-1].origenPlanIntegral=true;
+    setPresupuestoLista(x.fecha,lista);
+  });
+  localStorage.setItem('jp_base_transporte_personas','5');
+  cargarPresupuestoFecha();render();mostrarCostosIntegrales();
+  document.getElementById('estadoPresupuestoIntegral').textContent='Presupuesto de cinco adultos aplicado. Completa los pendientes y vuelve a aplicar para actualizar. Los valores son estimaciones hasta sustituirlos por los importes reales.';
+}
+mostrarCostosIntegrales();
 </script>
 </body>
 </html>
