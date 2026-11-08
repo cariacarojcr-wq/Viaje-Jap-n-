@@ -125,6 +125,7 @@ select.compact{font-size:13px;padding:6px;min-width:120px}
 </div>
 <div class="budgetbox"><b>Costos de reserva / planificación</b>
 <p class="small">Registra el <b>total del grupo (5 adultos)</b> en <b>yenes o pesos colombianos</b>. Al escribir una moneda, la otra se calcula automáticamente con la tasa de la fecha, que puedes ajustar por rubro. Un valor 0 significa «pendiente», no «gratis».</p>
+<p class="budgetbox" style="border:2px solid #d7a6b5"><b>🏎️ Tour Rápido y Furioso — 16 de diciembre</b><br><span class="small">Incluido en Tours y excursiones para 5 adultos. Precio por registrar.</span><br><a class="btn alt" href="#tourRapidoFuriosoPlan">Ir directamente al tour y escribir el precio</a></p>
 <div id="listaCostosIntegrales"></div>
 <button class="btn ok" onclick="cargarPresupuestoIntegral5()">Aplicar presupuesto integral para 5 adultos</button>
 <button class="btn alt" onclick="guardarCostosIntegrales()">Guardar importes sin aplicar</button>
@@ -1086,16 +1087,16 @@ function planIntegralActual(){
   try{
     const raw=JSON.parse(secureStore.getItem(PLAN_INTEGRAL_KEY)||'null');
     if(Array.isArray(raw) && raw.length){
-      if(raw.length===PLAN_INTEGRAL_5.length) return raw;
-      // Migrate the previous 5-adult plan without resetting saved amounts,
-      // exchange rates, payment status, or index-linked expenses.
-      if(raw.length===PLAN_INTEGRAL_5.length-1 &&
-         raw.every((x,i)=>x.concepto===PLAN_INTEGRAL_5[i].concepto)){
-        const upgraded=[...raw,{...PLAN_INTEGRAL_5[PLAN_INTEGRAL_5.length-1]}];
+      // Append only the missing tour. Preserve every existing row, value,
+      // currency, payment state and index (linked expenses use these indices).
+      const tour=PLAN_INTEGRAL_5.find(x=>x.subcategoria==='Rápido y Furioso');
+      const presente=raw.some(x=>x && (x.subcategoria==='Rápido y Furioso' ||
+        /tour r[aá]pido y furioso/i.test(String(x.concepto||''))));
+      if(tour && !presente){
+        const upgraded=[...raw,{...tour}];
         secureStore.setItem(PLAN_INTEGRAL_KEY,JSON.stringify(upgraded));
         return upgraded;
       }
-      // Unexpected saved format: preserve the user's data rather than reset it.
       return raw;
     }
   }catch(e){}
@@ -1152,7 +1153,8 @@ function mostrarCostosIntegrales(){
   const table=plan.map((x,i)=>{
     const rate=Number(x.tasaPlanCOPJPY)>0?Number(x.tasaPlanCOPJPY):tasaDia(x.fecha);
     const copPlan=importePlanCOP(x);
-    return `<div class="budgetbox" id="integralFila_${i}" data-moneda="${x.monedaPlan==='COP'?'COP':'JPY'}">
+    return `<div class="budgetbox" id="integralFila_${i}" ${x.subcategoria==='Rápido y Furioso'?'data-tour="16d"':''} data-moneda="${x.monedaPlan==='COP'?'COP':'JPY'}">
+      ${x.subcategoria==='Rápido y Furioso'?'<div id="tourRapidoFuriosoPlan"><b>🏎️ TOUR DEL 16 DE DICIEMBRE · 5 ADULTOS</b></div>':''}
       <b>${escapeHTML(x.concepto)}</b><br><span class="small">${escapeHTML(x.fecha.slice(5))} · ${escapeHTML(x.categoria)} · ${escapeHTML(x.nota)}</span>
       <div class="grid2"><div><label>Total 5 adultos · ¥ JPY</label><input aria-label="Total en yenes: ${escapeHTML(x.concepto)}" id="integralValor_${i}" type="number" min="0" step="any" inputmode="decimal" value="${Number(x.valor||0)}" oninput="sincronizarPlanIntegral(${i},'JPY')"/></div>
       <div><label>Total 5 adultos · $ COP</label><input aria-label="Total en pesos: ${escapeHTML(x.concepto)}" id="integralCOP_${i}" type="number" min="0" step="any" inputmode="decimal" value="${Math.round(copPlan*100)/100}" oninput="sincronizarPlanIntegral(${i},'COP')"/></div></div>
