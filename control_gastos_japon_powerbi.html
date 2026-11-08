@@ -138,6 +138,8 @@ select.compact{font-size:13px;padding:6px;min-width:120px}
 </section>
 <section class="card">
 <h2>💰 Presupuesto del día</h2>
+<label>Fecha del presupuesto</label>
+<input id="fechaPresupuestoDia" type="date" onchange="seleccionarFechaPresupuestoDia()"/>
 <div class="grid2">
 <div>
 <label>Rubro / Categoría</label>
@@ -179,6 +181,7 @@ select.compact{font-size:13px;padding:6px;min-width:120px}
 <label>Cuenta o fondo asociado (opcional; especialmente para débito)</label><input id="fondoAsociadoTarjeta" placeholder="Ej: Cuenta Bancolombia COP"/>
 <button class="btn ok" onclick="crearTarjeta()">Agregar tarjeta</button>
 <h3>Deuda por tarjeta</h3><div id="listaTarjetas"></div>
+<div class="kpi"><b>Deuda total de tarjetas de crédito COP</b><div id="deudaTotalTarjetasCOP">$0</div></div>
 <h3>Abonar a tarjeta de crédito</h3>
 <div class="grid2"><div><label>Fecha del abono</label><input type="date" id="fechaAbono"/></div><div><label>Tarjeta</label><select id="tarjetaAbono"></select></div></div>
 <div class="grid2"><div><label>Abono COP</label><input type="number" id="montoAbono" min="0" step="any"/></div><div><label>Cuenta o fondo que paga</label><select id="fondoAbono"></select></div></div>
@@ -203,7 +206,7 @@ select.compact{font-size:13px;padding:6px;min-width:120px}
 <div class="grid3"><div class="kpi"><b>Planificado ¥</b><div id="planKPI">¥0</div></div><div class="kpi"><b>Pagado vinculado ¥</b><div id="planPagadoKPI">¥0</div></div><div class="kpi"><b>Pendiente ¥</b><div id="planPendienteKPI">¥0</div></div></div>
 <div id="listaEstadoPlan"></div>
 </section>
-<section class="card">
+<section class="card" id="registrar-gasto">
 <h2>➕ Registrar gasto</h2>
 <label>Fecha del gasto</label>
 <input id="fechaGasto" type="date"/>
@@ -308,6 +311,7 @@ select.compact{font-size:13px;padding:6px;min-width:120px}
 <h3>Saldo por fondo / cuenta</h3>
 <div id="resumenFondos"></div>
 <h3>Ingresos registrados</h3>
+<div class="grid2"><div class="kpi"><b>Total ingresos registrados COP (disponibles y previstos)</b><div id="totalDetalleIngresosCOP">$0</div></div><div class="kpi"><b>Total ingresos registrados ¥ equivalentes</b><div id="totalDetalleIngresosJPY">¥0</div></div></div>
 <div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Origen</th><th>Fondo</th><th>Estado</th><th>Moneda</th><th>Importe</th><th>COP</th><th></th></tr></thead><tbody id="tablaIngresos"></tbody></table></div>
 <button class="btn warn" onclick="if(confirm('El CSV no está cifrado. ¿Deseas exportarlo?'))exportarIngresosCSV()">Exportar ingresos CSV</button>
 </section>
@@ -378,6 +382,8 @@ select.compact{font-size:13px;padding:6px;min-width:120px}
 </section>
 <section class="card">
 <h2>📋 Detalle</h2>
+<a class="btn ok" href="#registrar-gasto">➕ Ir a registrar gasto</a>
+<div class="grid2"><div class="kpi"><b>Total gastos registrados ¥</b><div id="totalDetalleGastosJPY">¥0</div></div><div class="kpi"><b>Total gastos registrados COP</b><div id="totalDetalleGastosCOP">$0</div></div></div>
 <div style="overflow-x:auto">
 <table>
 <thead>
@@ -637,7 +643,15 @@ function actualizarSubcategoriaPresupuesto(){
   });
 }
 
+function seleccionarFechaPresupuestoDia(){
+  const fecha=document.getElementById('fechaPresupuestoDia').value;
+  if(!fecha)return;
+  document.getElementById('fecha').value=fecha;
+  document.getElementById('fecha').dispatchEvent(new Event('change'));
+}
+
 function cargarPresupuestoFecha(){
+  document.getElementById('fechaPresupuestoDia').value=fechaActual();
   const lista=getPresupuestoLista(fechaActual());
   const total=lista.reduce((s,x)=>s+Number(x.valor||0),0);
   document.getElementById("presupuestoTotalDia").value=total||"";
@@ -738,6 +752,8 @@ function agregarIngreso(){
 function eliminarIngreso(i){if(!confirm('¿Eliminar este ingreso?'))return;const a=ingresos();a.splice(i,1);setIngresos(a);actualizarFondosGasto();actualizarSelectoresFinancieros();render();}
 function renderIngresos(arrGastos){
   const a=ingresos();
+  document.getElementById('totalDetalleIngresosCOP').textContent=cop(a.reduce((s,x)=>s+Number(x.valorCOP||0),0));
+  document.getElementById('totalDetalleIngresosJPY').textContent=yen(a.reduce((s,x)=>s+Number(x.valorYen||0),0));
   const disponibles=a.filter(x=>x.estado==='Disponible').reduce((s,x)=>s+Number(x.valorCOP||0),0);
   const previstos=a.filter(x=>x.estado==='Previsto').reduce((s,x)=>s+Number(x.valorCOP||0),0);
   const gastosCOP=arrGastos.filter(x=>x.medioPago!=='Tarjeta crédito').reduce((s,x)=>s+Number(x.valorCOP||0),0)
@@ -946,6 +962,8 @@ function renderResumenDias(arr){
 
 function render(){
   const arr=gastos();
+  document.getElementById("totalDetalleGastosJPY").textContent=yen(arr.reduce((s,x)=>s+Number(x.valorYen||0),0));
+  document.getElementById("totalDetalleGastosCOP").textContent=cop(arr.reduce((s,x)=>s+Number(x.valorCOP||0),0));
   const fecha=fechaActual();
   const presupuestoDia=totalPresupuestoFecha(fecha);
   const total=arr.reduce((s,x)=>s+Number(x.valorYen),0);
@@ -1340,6 +1358,13 @@ function cambiarEstadoPlan(i,v){
 }
 function renderFinanzasNuevas(arr){
   const cards=tarjetas(),abonos=abonosTarjeta(),cambios=cambiosEfectivo();
+  const deudaTotal=cards.filter(t=>t.tipo==='credito').reduce((s,t)=>{
+    const consumos=arr.filter(x=>x.tarjetaId===t.id&&x.medioPago==='Tarjeta crédito').reduce((v,x)=>v+Number(x.valorCOP||0),0);
+    const avances=cambios.filter(x=>x.origen==='credito'&&x.tarjetaId===t.id).reduce((v,x)=>v+Number(x.valorCOP||0),0);
+    const pagado=abonos.filter(x=>x.tarjetaId===t.id).reduce((v,x)=>v+Number(x.montoCOP||0),0);
+    return s+Number(t.deudaInicialCOP||0)+consumos+avances-pagado;
+  },0);
+  document.getElementById('deudaTotalTarjetasCOP').textContent=cop(deudaTotal);
   document.getElementById('listaTarjetas').innerHTML=cards.length?cards.map(t=>{
     const consumos=arr.filter(x=>x.tarjetaId===t.id&&x.medioPago==='Tarjeta crédito').reduce((s,x)=>s+Number(x.valorCOP||0),0);
     const avances=cambios.filter(x=>x.origen==='credito'&&x.tarjetaId===t.id).reduce((s,x)=>s+Number(x.valorCOP||0),0);
