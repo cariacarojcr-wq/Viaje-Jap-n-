@@ -351,6 +351,19 @@ select.compact{font-size:13px;padding:6px;min-width:120px}
 <h2>👤 Arqueo por pagado por</h2>
 <div id="resumenPagadoPor"></div>
 </section>
+<section class="card" id="firebase-sync">
+<h2>☁️ Sincronización cifrada — iPhone y iPad</h2>
+<p class="small">Inicia sesión con la misma cuenta Google en ambos dispositivos. Solo se envía a Firebase el respaldo <b>cifrado</b>; la contraseña privada no se transmite. La sincronización es manual para evitar pérdidas.</p>
+<p id="cloudAccount" class="small">Sin conectar a Google.</p>
+<p id="cloudStatus" class="small" role="status" aria-live="polite">Sin sincronización.</p>
+<button class="btn alt" type="button" onclick="cloudLogin()">Entrar con Google</button>
+<button class="btn alt" type="button" onclick="cloudLogout()">Salir de Google</button>
+<div class="sep"></div>
+<button class="btn ok" type="button" onclick="cloudUpload()">⬆️ Subir copia cifrada a la nube</button>
+<button class="btn warn" type="button" onclick="cloudDownload()">⬇️ Recuperar copia de la nube</button>
+<button class="btn alt" type="button" onclick="cloudInspect()">Consultar versión en la nube</button>
+<p class="small">Antes de recuperar datos, exporta una copia cifrada local. Recuperar sustituye los datos de este dispositivo solo tras confirmar y verificar la contraseña del respaldo. Si otro dispositivo modificó la nube, se bloquea la subida hasta que revises la versión.</p>
+</section>
 <section class="card" id="backup-presupuesto">
 <h2>🛡️ Copia de seguridad cifrada</h2><p class="vaultpill" id="vaultStatus">🔒 Datos protegidos</p><button class="btn alt" onclick="bloquearVault()">Bloquear ahora</button>
 <div class="backupbox">
@@ -376,8 +389,8 @@ select.compact{font-size:13px;padding:6px;min-width:120px}
 </section>
 <div class="fixed">
 <a class="btn alt" href="app_japon_estatica_visible.html">⬅️ App</a>
-<button class="btn ok" onclick="agregarGasto()">Guardar</button>
-<button class="btn warn" onclick="exportarCSV()">CSV</button>
+<a class="btn ok" href="#firebase-sync">☁️ Sincronizar</a>
+<a class="btn alt" href="#backup-presupuesto">Respaldo</a>
 </div>
 <script>
 // Private vault. All jp_* data lives only in encrypted AES-GCM localStorage after unlock.
@@ -478,7 +491,7 @@ async function bloquearVault(){
 window.addEventListener('beforeunload',e=>{
   if(vaultKey&&vaultSavedRevision!==vaultRevision){e.preventDefault();e.returnValue='Guardando datos cifrados';}
 });
-// Never transmit financial data to any external service.
+// Only encrypted vault snapshots may be uploaded to Firebase when explicitly requested.
 iniciarVault();
 
 
@@ -1398,6 +1411,75 @@ function operarCalculadoraRapida(signo){
 }
 function limpiarCalculadoraRapida(){calculadoraAcumuladoCOP=0;actualizarCalculadoraRapida();}
 
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+// Firebase cloud transport: ciphertext only; never uploads plaintext or passwords.
+const JP_FIREBASE_CONFIG={apiKey:'AIzaSyD9LOMYfbrt70JDI0MSrLrTMrCFtlXVi3k',authDomain:'viaje-japon-2026-b660a.firebaseapp.com',projectId:'viaje-japon-2026-b660a',storageBucket:'viaje-japon-2026-b660a.firebasestorage.app',messagingSenderId:'370023867330',appId:'1:370023867330:web:5413c8b2807c5b2f7eac5b',measurementId:'G-FWR3LSXEXD'};
+let jpCloudAuth=null,jpCloudDb=null,jpCloudUser=null,jpCloudSeenRevision=null,jpCloudBusy=false;
+function cloudMessage(message){const el=document.getElementById('cloudStatus');if(el)el.textContent=message;}
+function cloudDoc(){if(!jpCloudUser||!jpCloudDb)throw new Error('Primero inicia sesión con Google.');return jpCloudDb.collection('usuarios').doc(jpCloudUser.uid).collection('vault').doc('principal');}
+function cloudReady(){if(!vaultKey)throw new Error('Desbloquea la bóveda privada primero.');return cloudDoc();}
+function cloudDate(data){return data?.updatedAt?.toDate?.().toLocaleString('es-CO')||'sin fecha';}
+async function cloudInspect(){try{const doc=cloudReady();const snap=await doc.get();if(!snap.exists){jpCloudSeenRevision=0;cloudMessage('La nube está vacía. Puedes subir tu primera copia cifrada.');return;}const data=snap.data();cloudMessage('Copia en la nube: versión '+data.revision+' · '+cloudDate(data)+'. Datos cifrados.');if(jpCloudSeenRevision===null)cloudMessage('Existe una copia en la nube (versión '+data.revision+'). Recupérala antes de intentar subir datos de otro dispositivo.');}catch(e){cloudMessage('Error consultando nube: '+e.message);}}
+async function cloudLogin(){try{if(!jpCloudAuth)throw new Error('Firebase no cargó. Comprueba tu conexión.');await jpCloudAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider());}catch(e){cloudMessage('No se pudo iniciar sesión: '+e.message+' En iPhone, prueba abrir el enlace en Safari y permitir ventanas emergentes.');}}
+async function cloudLogout(){try{if(jpCloudAuth)await jpCloudAuth.signOut();}catch(e){cloudMessage('Error cerrando sesión: '+e.message);}}
+async function cloudUpload(){
+ if(jpCloudBusy)return; jpCloudBusy=true;
+ try{
+  const ref=cloudReady();await flushVault();
+  const payload=JSON.parse(localStorage.getItem(VAULT_STORAGE_KEY)||'null');
+  if(!payload||payload.type!=='JP_VAULT_AES_GCM_V1')throw new Error('No existe un respaldo cifrado válido.');
+  const snap=await ref.get();const current=snap.exists?snap.data():null;
+  if(current&&jpCloudSeenRevision===null)throw new Error('Ya hay datos en la nube. Primero recupera la copia y verifica su contenido. No se sobrescribirá.');
+  if(current&&current.revision!==jpCloudSeenRevision)throw new Error('Otro dispositivo actualizó la nube. Descarga y revisa la versión antes de subir.');
+  if(!confirm('¿Subir tu bóveda CIFRADA a Google? Esta operación actualizará la versión en la nube.'))return;
+  cloudMessage('Subiendo respaldo cifrado…');
+  const newRev=await jpCloudDb.runTransaction(async tx=>{
+    const latest=await tx.get(ref),remote=latest.exists?latest.data():null;
+    const remoteRev=remote?.revision||0;
+    if(remoteRev!==(jpCloudSeenRevision??0))throw new Error('Conflicto: la nube cambió durante la subida. No se sobrescribió.');
+    if(remote?.payload){const history=ref.parent.parent.collection('historial').doc('v'+String(remoteRev).padStart(8,'0'));tx.set(history,{...remote,archivedAt:firebase.firestore.FieldValue.serverTimestamp()});}
+    const next=remoteRev+1;
+    tx.set(ref,{payload,revision:next,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),source:'manual',schema:1});
+    return next;
+  });
+  jpCloudSeenRevision=newRev;sessionStorage.setItem('jp_cloud_base_'+jpCloudUser.uid,String(newRev));cloudMessage('✓ Copia cifrada subida correctamente. Versión '+newRev+'.');
+ }catch(e){cloudMessage('⚠️ No se subió: '+e.message);}finally{jpCloudBusy=false;}
+}
+async function cloudDownload(){
+ if(jpCloudBusy)return;jpCloudBusy=true;
+ try{
+  const ref=cloudReady();const snap=await ref.get();if(!snap.exists)throw new Error('Todavía no hay respaldo en la nube.');
+  const remote=snap.data(),payload=remote.payload;
+  if(!payload||payload.type!=='JP_VAULT_AES_GCM_V1')throw new Error('El respaldo remoto no tiene un formato válido.');
+  const pass=prompt('Escribe la contraseña PRIVADA de la copia guardada en la nube. No se enviará a Google:');
+  if(pass===null)return;
+  let restored;
+  try{restored=await decryptVault(payload,pass);}catch(e){throw new Error('Contraseña incorrecta o copia dañada. No se modificaron datos.');}
+  if(!restored||typeof restored!=='object'||Array.isArray(restored))throw new Error('Contenido remoto inválido.');
+  if(!confirm('Se REEMPLAZARÁN los datos de este dispositivo por la versión '+remote.revision+' de la nube. Antes, exporta un respaldo cifrado local. ¿Confirmas?'))return;
+  await flushVault();
+  // Keep this device's local encryption key/password. Only replace the decrypted state.
+  const previousState=vaultState;vaultState=restored;
+  try{await flushVault(true);}catch(e){vaultState=previousState;throw e;}
+  jpCloudSeenRevision=remote.revision;sessionStorage.setItem('jp_cloud_base_'+jpCloudUser.uid,String(remote.revision));
+  cloudMessage('✓ Recuperada versión '+remote.revision+'. Recargando aplicación…');
+  location.reload();
+ }catch(e){cloudMessage('⚠️ No se recuperó: '+e.message);}finally{jpCloudBusy=false;}
+}
+try{
+ if(typeof firebase==='undefined')throw new Error('No se pudieron cargar las bibliotecas Firebase.');
+ firebase.initializeApp(JP_FIREBASE_CONFIG);
+ jpCloudAuth=firebase.auth();jpCloudDb=firebase.firestore();
+ jpCloudAuth.onAuthStateChanged(user=>{
+   jpCloudUser=user;const savedBase=user?sessionStorage.getItem('jp_cloud_base_'+user.uid):null;jpCloudSeenRevision=savedBase===null?null:Number(savedBase);
+   document.getElementById('cloudAccount').textContent=user?'Google: '+(user.email||'sesión iniciada'):'Sin conectar a Google.';
+   cloudMessage(user?'Conectado. Consulta la versión en la nube antes de sincronizar.':'Sin sincronización. Inicia sesión con Google.');
+ });
+}catch(e){cloudMessage('Firebase no está disponible: '+e.message);}
 </script>
 </body>
 </html>
