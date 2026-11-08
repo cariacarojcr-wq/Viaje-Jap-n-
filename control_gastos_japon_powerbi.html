@@ -205,6 +205,8 @@ select.compact{font-size:13px;padding:6px;min-width:120px}
 </section>
 <section class="card">
 <h2>➕ Registrar gasto</h2>
+<label>Fecha del gasto</label>
+<input id="fechaGasto" type="date"/>
 <div class="grid2">
 <div>
 <label>Pagado por</label>
@@ -776,6 +778,8 @@ function descargarCSV(rows,nombre){
 
 function agregarGasto(){
   limpiarErrorGasto();
+  const fechaGasto=document.getElementById("fechaGasto").value;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(fechaGasto)){mostrarErrorGasto("Selecciona la fecha del gasto.","fechaGasto");return;}
   const concepto=document.getElementById("concepto").value.trim();
   const moneda=document.getElementById('monedaGasto').value;
   const valorOriginal=parseNumeroFlexible(document.getElementById('valorYen').value);
@@ -788,7 +792,7 @@ function agregarGasto(){
 
   const now=new Date();
   const item={
-    fecha:fechaActual(),
+    fecha:document.getElementById("fechaGasto").value||fechaActual(),
     hora:String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0"),
     trm:tasa,
     trmDia:getTRM(),
@@ -886,11 +890,14 @@ function renderComparativoDia(arr,fecha){
   const cats=[...new Set([...Object.keys(subcats),...lista.map(x=>x.categoria),...arr.filter(x=>x.fecha===fecha).map(x=>x.categoria)])];
   const totalP=totalPresupuestoFecha(fecha);
   const gastoTotal=arr.filter(x=>x.fecha===fecha).reduce((s,x)=>s+Number(x.valorYen),0);
+  const gastoTotalCOP=arr.filter(x=>x.fecha===fecha).reduce((s,x)=>s+Number(x.valorCOP||0),0);
+  const tasaPresupuesto=tasaDia(fecha);
 
   let html=cats.map(cat=>{
     const presup=lista.filter(x=>x.categoria===cat).reduce((s,x)=>s+Number(x.valor||0),0);
     const gasto=gastoCategoriaFecha(arr,fecha,cat);
     const saldo=presup-gasto;
+    const gastoCOP=arr.filter(x=>x.fecha===fecha&&x.categoria===cat).reduce((s,x)=>s+Number(x.valorCOP||0),0);
 
     const subs=[...new Set([
       ...lista.filter(x=>x.categoria===cat).map(x=>x.subcategoria),
@@ -901,14 +908,15 @@ function renderComparativoDia(arr,fecha){
       const psub=lista.filter(x=>x.categoria===cat && x.subcategoria===sub).reduce((s,x)=>s+Number(x.valor||0),0);
       const gsub=gastoSubcategoriaFecha(arr,fecha,cat,sub);
       const ssub=psub-gsub;
-      return `<div class="row"><div class="small">↳ ${sub}<br>Ppto ${yen(psub)} · Real ${yen(gsub)}</div><b class="${psub===0?'neutral':(ssub<0?'over':'under')}">${yen(ssub)}</b></div>`;
+      const gsubCOP=arr.filter(x=>x.fecha===fecha&&x.categoria===cat&&x.subcategoria===sub).reduce((s,x)=>s+Number(x.valorCOP||0),0);
+      return `<div class="row"><div class="small">↳ ${sub}<br>Ppto ${yen(psub)} · Real ${yen(gsub)}<br>Ppto ${cop(psub*tasaPresupuesto)} · Real ${cop(gsubCOP)}</div><b class="${psub===0?'neutral':(ssub<0?'over':'under')}">${yen(ssub)}</b></div>`;
     }).join("");
 
-    return `<div class="budgetbox"><div class="row"><div><b>${cat}</b><br><span class="small">Presupuesto ${yen(presup)} · Gasto real ${yen(gasto)}</span></div><b class="${presup===0?'neutral':(saldo<0?'over':'under')}">${yen(saldo)}</b></div>${detalleSubs}</div>`;
+    return `<div class="budgetbox"><div class="row"><div><b>${cat}</b><br><span class="small">Presupuesto ${yen(presup)} · Gasto real ${yen(gasto)}<br>Presupuesto ${cop(presup*tasaPresupuesto)} · Gasto real ${cop(gastoCOP)}</span></div><b class="${presup===0?'neutral':(saldo<0?'over':'under')}">${yen(saldo)}</b></div>${detalleSubs}</div>`;
   }).join("");
 
   const saldoTotal=totalP-gastoTotal;
-  html+=`<div class="budgetbox"><div class="row"><div><b>TOTAL DÍA</b><br><span class="small">Presupuesto ${yen(totalP)} · Gasto real ${yen(gastoTotal)}</span></div><b class="${totalP===0?'neutral':(saldoTotal<0?'over':'under')}">${yen(saldoTotal)}</b></div></div>`;
+  html+=`<div class="budgetbox"><div class="row"><div><b>TOTAL DÍA</b><br><span class="small">Presupuesto ${yen(totalP)} · Gasto real ${yen(gastoTotal)}<br>Presupuesto ${cop(totalP*tasaPresupuesto)} · Gasto real ${cop(gastoTotalCOP)}</span></div><b class="${totalP===0?'neutral':(saldoTotal<0?'over':'under')}">${yen(saldoTotal)}</b></div></div>`;
 
   document.getElementById("comparativoDia").innerHTML=html;
 }
@@ -920,16 +928,19 @@ function renderResumenDias(arr){
     const totalP=totalPresupuestoFecha(fecha);
     const gastoTotal=arr.filter(x=>x.fecha===fecha).reduce((s,x)=>s+Number(x.valorYen),0);
     const saldoTotal=totalP-gastoTotal;
+    const gastoTotalCOP=arr.filter(x=>x.fecha===fecha).reduce((s,x)=>s+Number(x.valorCOP||0),0);
+    const tasaPresupuesto=tasaDia(fecha);
 
     const cats=[...new Set([...lista.map(x=>x.categoria),...arr.filter(x=>x.fecha===fecha).map(x=>x.categoria)])];
     const detalle=cats.map(cat=>{
       const presup=lista.filter(x=>x.categoria===cat).reduce((s,x)=>s+Number(x.valor||0),0);
       const gasto=gastoCategoriaFecha(arr,fecha,cat);
       const saldo=presup-gasto;
-      return `<div class="row"><div>${cat}<br><span class="small">Ppto ${yen(presup)} · Real ${yen(gasto)}</span></div><b class="${presup===0?'neutral':(saldo<0?'over':'under')}">${yen(saldo)}</b></div>`;
+      const gastoCOP=arr.filter(x=>x.fecha===fecha&&x.categoria===cat).reduce((s,x)=>s+Number(x.valorCOP||0),0);
+      return `<div class="row"><div>${cat}<br><span class="small">Ppto ${yen(presup)} · Real ${yen(gasto)}<br>Ppto ${cop(presup*tasaPresupuesto)} · Real ${cop(gastoCOP)}</span></div><b class="${presup===0?'neutral':(saldo<0?'over':'under')}">${yen(saldo)}</b></div>`;
     }).join("");
 
-    return `<div class="budgetbox"><div class="row"><div><b>${fecha}</b><br><span class="small">TOTAL — Ppto ${yen(totalP)} · Real ${yen(gastoTotal)}</span></div><b class="${totalP===0?'neutral':(saldoTotal<0?'over':'under')}">${yen(saldoTotal)}</b></div>${detalle}</div>`;
+    return `<div class="budgetbox"><div class="row"><div><b>${fecha}</b><br><span class="small">TOTAL — Ppto ${yen(totalP)} · Real ${yen(gastoTotal)}<br>Ppto ${cop(totalP*tasaPresupuesto)} · Real ${cop(gastoTotalCOP)}</span></div><b class="${totalP===0?'neutral':(saldoTotal<0?'over':'under')}">${yen(saldoTotal)}</b></div>${detalle}</div>`;
   }).join("");
 }
 
@@ -1071,12 +1082,14 @@ function descargarJSON(obj,nombre){
 
 function iniciarAplicacion(){
 document.getElementById("fecha").value=secureStore.getItem("jp_fecha")||hoyISO();
+document.getElementById("fechaGasto").value=fechaActual();
 mostrarTasaDia();
 document.getElementById('fechaIngreso').value=fechaActual();
 actualizarMonedaGasto();actualizarMonedaIngreso();actualizarFondosGasto();
 
 document.getElementById("fecha").addEventListener("change",()=>{
   secureStore.setItem("jp_fecha",fechaActual());
+  document.getElementById("fechaGasto").value=fechaActual();
   mostrarTasaDia();
   calcularCOP();calcularIngreso();
   cargarPresupuestoFecha();
