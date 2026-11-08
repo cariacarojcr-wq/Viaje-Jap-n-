@@ -362,6 +362,7 @@ select.compact{font-size:13px;padding:6px;min-width:120px}
 <button class="btn ok" type="button" onclick="cloudUpload()">⬆️ Subir copia cifrada a la nube</button>
 <button class="btn warn" type="button" onclick="cloudDownload()">⬇️ Recuperar copia de la nube</button>
 <button class="btn alt" type="button" onclick="cloudInspect()">Consultar versión en la nube</button>
+<div class="backupbox"><b>iPad con datos más recientes</b><p class="small">Solo después de exportar y guardar el respaldo cifrado JSON de este dispositivo. Esta acción sustituye la copia principal de Firebase, conserva una versión anterior en el historial y no borra los datos locales.</p><button class="btn red" type="button" onclick="cloudReplaceFromThisDevice()">Reemplazar nube con datos de este dispositivo</button></div>
 <p class="small">Antes de recuperar datos, exporta una copia cifrada local. Recuperar sustituye los datos de este dispositivo solo tras confirmar y verificar la contraseña del respaldo. Si otro dispositivo modificó la nube, se bloquea la subida hasta que revises la versión.</p>
 </section>
 <section class="card" id="backup-presupuesto">
@@ -1448,6 +1449,43 @@ async function cloudUpload(){
   });
   jpCloudSeenRevision=newRev;sessionStorage.setItem('jp_cloud_base_'+jpCloudUser.uid,String(newRev));cloudMessage('✓ Copia cifrada subida correctamente. Versión '+newRev+'.');
  }catch(e){cloudMessage('⚠️ No se subió: '+e.message);}finally{jpCloudBusy=false;}
+}
+// Recuperación controlada cuando el dispositivo actual es la fuente de verdad.
+// La revisión remota se verifica de nuevo en la transacción; no se descargan
+// ni se reemplazan datos locales. La versión anterior queda archivada.
+async function cloudReplaceFromThisDevice(){
+ if(jpCloudBusy)return;
+ jpCloudBusy=true;
+ try{
+  const ref=cloudReady();
+  await flushVault();
+  const payload=JSON.parse(localStorage.getItem(VAULT_STORAGE_KEY)||'null');
+  if(!payload||payload.type!=='JP_VAULT_AES_GCM_V1')throw new Error('No hay copia local cifrada válida.');
+  const snap=await ref.get({source:'server'});
+  if(!snap.exists)throw new Error('No existe copia anterior. Usa el botón normal de subida.');
+  const current=snap.data();
+  const expected=Number(current.revision);
+  if(!Number.isSafeInteger(expected)||expected<1)throw new Error('Revisión remota inválida.');
+  if(!confirm('ATENCIÓN: este dispositivo reemplazará la versión '+expected+' de Firebase. Asegúrate de haber exportado y guardado el respaldo JSON cifrado de este iPad. ¿Continuar?'))return;
+  const phrase=prompt('Para confirmar que los datos de ESTE dispositivo son los más actualizados, escribe exactamente: IPAD ACTUALIZADO');
+  if(phrase!=='IPAD ACTUALIZADO'){cloudMessage('Operación cancelada. No se modificó Firebase.');return;}
+  cloudMessage('Verificando versión y subiendo copia cifrada del dispositivo…');
+  const next=await jpCloudDb.runTransaction(async tx=>{
+   const latest=await tx.get(ref);
+   const remote=latest.exists?latest.data():null;
+   if(!remote||remote.revision!==expected)throw new Error('Firebase cambió durante la operación. No se sobrescribió. Consulta de nuevo.');
+   if(!remote.payload||remote.payload.type!=='JP_VAULT_AES_GCM_V1')throw new Error('La copia anterior tiene un formato inesperado.');
+   const history=ref.parent.parent.collection('historial').doc('v'+String(expected).padStart(8,'0'));
+   tx.set(history,{...remote,archivedAt:firebase.firestore.FieldValue.serverTimestamp()});
+   const newVersion=expected+1;
+   tx.set(ref,{payload,revision:newVersion,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),source:'reemplazo-confirmado-ipad',schema:1});
+   return newVersion;
+  });
+  jpCloudSeenRevision=next;
+  sessionStorage.setItem('jp_cloud_base_'+jpCloudUser.uid,String(next));
+  cloudMessage('✓ Copia del iPad subida a Firebase. Versión '+next+'. Datos locales intactos.');
+ }catch(e){cloudMessage('⚠️ No se reemplazó la nube: '+e.message);}
+ finally{jpCloudBusy=false;}
 }
 async function cloudDownload(){
  if(jpCloudBusy)return;jpCloudBusy=true;
