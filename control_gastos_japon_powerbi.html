@@ -52,6 +52,13 @@ body.locked.admin-login #vaultGate{display:block!important}
 #familyPortal .familyBar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line)}
 #familyPortal iframe{border:0;width:100%;flex:1;background:white}
 #familyPortal .familyBar .btn{margin:0}
+
+/* Navegación inferior compacta: evita desplazamiento vertical excesivo */
+.nav-rapida{justify-content:flex-start;flex-wrap:nowrap!important;overflow-x:auto;overflow-y:hidden;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:thin;padding:8px 12px calc(8px + env(safe-area-inset-bottom));z-index:1000}
+.nav-rapida .btn{flex:0 0 auto;margin:0;padding:9px 11px;font-size:12px;white-space:nowrap}
+html{scroll-padding-top:14px;scroll-behavior:smooth}
+.detalle-subtotal{background:#202b3d}
+.detalle-subtotal td{border-bottom:2px solid #51617c}
 </style>
 </head>
 <body class="locked">
@@ -69,7 +76,7 @@ body.locked.admin-login #vaultGate{display:block!important}
 </div>
 
 <h1>💴 Mini Power BI — Gastos Japón</h1>
-<section class="card">
+<section class="card" id="configuracion">
 <h2>⚙️ Configuración</h2>
 <div class="grid2">
 <div>
@@ -149,7 +156,7 @@ body.locked.admin-login #vaultGate{display:block!important}
 <p class="small">Los Shinkansen a Jomo-Kogen y Kioto, y el autobús de Gotemba, ya están en <b>Transporte</b>. No vuelvas a ponerlos en «Tiquetes y entradas». Los traslados Klook, vuelos y excursiones solo se cargan si introduces sus importes aquí. Si una comida está incluida en un ryokan o tour, ajusta el presupuesto de alimentación de ese día.</p>
 </div>
 </section>
-<section class="card">
+<section class="card" id="presupuesto-dia">
 <h2>💰 Presupuesto del día</h2>
 <label>Fecha del presupuesto</label>
 <input id="fechaPresupuestoDia" type="date" onchange="seleccionarFechaPresupuestoDia()"/>
@@ -329,7 +336,7 @@ body.locked.admin-login #vaultGate{display:block!important}
 <div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Origen</th><th>Fondo</th><th>Estado</th><th>Moneda</th><th>Importe</th><th>COP</th><th></th></tr></thead><tbody id="tablaIngresos"></tbody></table></div>
 <button class="btn warn" onclick="if(confirm('El CSV no está cifrado. ¿Deseas exportarlo?'))exportarIngresosCSV()">Exportar ingresos CSV</button>
 </section>
-<section class="card">
+<section class="card" id="dashboard-viaje">
 <h2>📊 Dashboard viaje</h2>
 <div class="grid2">
 <div class="kpi"><b>Presupuesto total viaje ¥</b><div id="presupuestoViajeYen">¥0</div></div>
@@ -410,11 +417,19 @@ body.locked.admin-login #vaultGate{display:block!important}
 <button class="btn red" onclick="borrarTodo()">Borrar todos los gastos</button>
 <button class="btn alt" onclick="borrarPresupuestos()">Borrar presupuestos</button>
 </section>
-<div class="fixed">
+<nav class="fixed nav-rapida" aria-label="Accesos rápidos a las secciones">
 <a class="btn alt" href="app_japon_estatica_visible.html">⬅️ App</a>
+<a class="btn ok" href="#registrar-gasto">＋ Registrar gasto</a>
+<a class="btn alt" href="#presupuesto-dia">Presupuesto día</a>
+<a class="btn alt" href="#presupuesto-integral-5">Presupuesto completo</a>
+<a class="btn alt" href="#control-reservas-pagadas">Reservas</a>
+<a class="btn alt" href="#ingresos-fondos">Ingresos</a>
+<a class="btn alt" href="#dashboard-viaje">Dashboard</a>
+<a class="btn alt" href="#control-tarjetas">Tarjetas</a>
+<a class="btn alt" href="#control-efectivo">Efectivo</a>
 <a class="btn ok" href="#firebase-sync">☁️ Sincronizar</a>
 <a class="btn alt" href="#backup-presupuesto">Respaldo</a>
-</div>
+</nav>
 <script>
 // Public itinerary is an unchanged, separate existing page. No finance state is exposed here.
 function abrirAccesoPrivado(){document.body.classList.add('admin-login');document.getElementById('vaultPassword').focus();}
@@ -785,7 +800,16 @@ function renderDetalleFinanciacion(){
   const presupuestos=fechas.map(f=>({fecha:f,jpy:totalPresupuestoFecha(f),tasa:tasaDia(f)}));
   const total=presupuestos.reduce((s,x)=>s+x.jpy*x.tasa,0);
   const cobertura=disponibles+previstos-total;
-  const filas=presupuestos.map(x=>`<tr><td>${escapeHTML(x.fecha)}</td><td>${yen(x.jpy)}</td><td>${cop(x.tasa)} / ¥</td><td>${cop(x.jpy*x.tasa)}</td></tr>`).join('');
+  const filas=presupuestos.flatMap(x=>{
+    const rubros=getPresupuestoLista(x.fecha);
+    if(!rubros.length)return [];
+    const detalle=rubros.map(r=>{
+      const valor=Number(r.valor||0);
+      return `<tr><td>${escapeHTML(x.fecha)}</td><td>${escapeHTML(r.categoria||'Sin categoría')}</td><td>${escapeHTML(r.subcategoria||'Sin subcategoría')}</td><td>${yen(valor)}</td><td>${cop(x.tasa)} / ¥</td><td>${cop(valor*x.tasa)}</td></tr>`;
+    });
+    detalle.push(`<tr class="detalle-subtotal"><td><b>${escapeHTML(x.fecha)}</b></td><td colspan="2"><b>Total del día</b></td><td><b>${yen(x.jpy)}</b></td><td></td><td><b>${cop(x.jpy*x.tasa)}</b></td></tr>`);
+    return detalle;
+  }).join('');
   panel.innerHTML=`<h3>Detalle de por financiar</h3>
     <div class="row"><span>Presupuesto total de las fechas registradas</span><b>${cop(total)}</b></div>
     <div class="row"><span>(−) Ingresos disponibles</span><b>${cop(disponibles)}</b></div>
@@ -793,7 +817,7 @@ function renderDetalleFinanciacion(){
     <div class="row"><b>Por financiar</b><b>${cop(Math.max(0,-cobertura))}</b></div>
     <p class="small">Se suman los presupuestos diarios guardados y se restan los ingresos disponibles y previstos. Los ingresos previstos cuentan para la cobertura, aunque aún no estén recibidos. Los gastos ya pagados no se descuentan de nuevo.</p>
     <h3>Presupuesto por fecha</h3>
-    ${filas?`<div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Presupuesto ¥</th><th>Tasa COP/¥</th><th>Presupuesto COP</th></tr></thead><tbody>${filas}</tbody></table></div>`:'<p class="small">No hay presupuestos diarios guardados; por eso no hay importes que sumar. Revisa las fechas en Presupuesto del día.</p>'}
+    ${filas?`<div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Rubro</th><th>Subcategoría</th><th>Presupuesto ¥</th><th>Tasa COP/¥</th><th>Presupuesto COP</th></tr></thead><tbody>${filas}</tbody></table></div>`:'<p class="small">No hay presupuestos diarios guardados; por eso no hay importes que sumar. Revisa las fechas en Presupuesto del día.</p>'}
     <h3>Ingresos incluidos en el cálculo</h3>
     ${registros.length?`<div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Concepto</th><th>Estado</th><th>Valor COP</th></tr></thead><tbody>${registros.map(x=>`<tr><td>${escapeHTML(x.fecha||'')}</td><td>${escapeHTML(x.concepto||'')}</td><td>${escapeHTML(x.estado||'')}</td><td>${cop(x.valorCOP)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="small">No hay ingresos registrados.</p>'}`;
 }
