@@ -317,9 +317,10 @@ body.locked.admin-login #vaultGate{display:block!important}
 <div class="kpi"><b>Ingresos previstos COP</b><div id="totalIngresosPrevistos">$0</div></div>
 <div class="kpi"><b>Gastos pagados COP</b><div id="gastosFinanciadosCOP">$0</div></div>
 <div class="kpi"><b>Saldo disponible COP</b><div id="saldoFondosCOP">$0</div></div>
-<div class="kpi"><b>Por financiar del presupuesto COP</b><div id="faltanteFinanciacion">$0</div></div>
+<div class="kpi"><b>Por financiar del presupuesto COP</b><div id="faltanteFinanciacion">$0</div><button type="button" class="btn alt" onclick="alternarDetalleFinanciacion()" aria-controls="detalleFinanciacion" aria-expanded="false" id="btnDetalleFinanciacion">Ver detalle del cálculo</button></div>
 <div class="kpi"><b>Recursos vs presupuesto COP</b><div id="coberturaPresupuesto">$0</div></div>
 </div>
+<div id="detalleFinanciacion" class="card" style="display:none;margin-top:12px" aria-live="polite"></div>
 <p class="small">La cobertura compara recursos disponibles + previstos con el presupuesto total del viaje. Los gastos ya registrados no se descuentan otra vez del presupuesto. Los rubros pendientes de cotización aún no están incluidos.</p>
 <h3>Saldo por fondo / cuenta</h3>
 <div id="resumenFondos"></div>
@@ -765,6 +766,37 @@ function agregarIngreso(){
   actualizarFondosGasto();actualizarSelectoresFinancieros();calcularIngreso();render();
 }
 function eliminarIngreso(i){if(!confirm('¿Eliminar este ingreso?'))return;const a=ingresos();a.splice(i,1);setIngresos(a);actualizarFondosGasto();actualizarSelectoresFinancieros();render();}
+function alternarDetalleFinanciacion(){
+  const panel=document.getElementById('detalleFinanciacion');
+  const boton=document.getElementById('btnDetalleFinanciacion');
+  const mostrar=panel.style.display==='none';
+  panel.style.display=mostrar?'block':'none';
+  boton.textContent=mostrar?'Ocultar detalle del cálculo':'Ver detalle del cálculo';
+  boton.setAttribute('aria-expanded',String(mostrar));
+  if(mostrar)renderDetalleFinanciacion();
+}
+function renderDetalleFinanciacion(){
+  const panel=document.getElementById('detalleFinanciacion');
+  if(!panel)return;
+  const registros=ingresos();
+  const disponibles=registros.filter(x=>x.estado==='Disponible').reduce((s,x)=>s+Number(x.valorCOP||0),0);
+  const previstos=registros.filter(x=>x.estado==='Previsto').reduce((s,x)=>s+Number(x.valorCOP||0),0);
+  const fechas=fechasConPresupuesto().sort();
+  const presupuestos=fechas.map(f=>({fecha:f,jpy:totalPresupuestoFecha(f),tasa:tasaDia(f)}));
+  const total=presupuestos.reduce((s,x)=>s+x.jpy*x.tasa,0);
+  const cobertura=disponibles+previstos-total;
+  const filas=presupuestos.map(x=>`<tr><td>${escapeHTML(x.fecha)}</td><td>${yen(x.jpy)}</td><td>${cop(x.tasa)} / ¥</td><td>${cop(x.jpy*x.tasa)}</td></tr>`).join('');
+  panel.innerHTML=`<h3>Detalle de por financiar</h3>
+    <div class="row"><span>Presupuesto total de las fechas registradas</span><b>${cop(total)}</b></div>
+    <div class="row"><span>(−) Ingresos disponibles</span><b>${cop(disponibles)}</b></div>
+    <div class="row"><span>(−) Ingresos previstos</span><b>${cop(previstos)}</b></div>
+    <div class="row"><b>Por financiar</b><b>${cop(Math.max(0,-cobertura))}</b></div>
+    <p class="small">Se suman los presupuestos diarios guardados y se restan los ingresos disponibles y previstos. Los ingresos previstos cuentan para la cobertura, aunque aún no estén recibidos. Los gastos ya pagados no se descuentan de nuevo.</p>
+    <h3>Presupuesto por fecha</h3>
+    ${filas?`<div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Presupuesto ¥</th><th>Tasa COP/¥</th><th>Presupuesto COP</th></tr></thead><tbody>${filas}</tbody></table></div>`:'<p class="small">No hay presupuestos diarios guardados; por eso no hay importes que sumar. Revisa las fechas en Presupuesto del día.</p>'}
+    <h3>Ingresos incluidos en el cálculo</h3>
+    ${registros.length?`<div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Concepto</th><th>Estado</th><th>Valor COP</th></tr></thead><tbody>${registros.map(x=>`<tr><td>${escapeHTML(x.fecha||'')}</td><td>${escapeHTML(x.concepto||'')}</td><td>${escapeHTML(x.estado||'')}</td><td>${cop(x.valorCOP)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="small">No hay ingresos registrados.</p>'}`;
+}
 function renderIngresos(arrGastos){
   const a=ingresos();
   document.getElementById('totalDetalleIngresosCOP').textContent=cop(a.reduce((s,x)=>s+Number(x.valorCOP||0),0));
@@ -781,6 +813,7 @@ function renderIngresos(arrGastos){
   const presupuestoCOP=fechasConPresupuesto().reduce((s,f)=>s+totalPresupuestoFecha(f)*tasaDia(f),0);
   const cobertura=disponibles+previstos-presupuestoCOP;
   document.getElementById('faltanteFinanciacion').textContent=cop(Math.max(0,-cobertura));
+  if(document.getElementById('detalleFinanciacion').style.display!=='none')renderDetalleFinanciacion();
   document.getElementById('coberturaPresupuesto').textContent=cop(cobertura);
   document.getElementById('coberturaPresupuesto').className=cobertura<0?'over':'under';
   const fondos=[...new Set([...a.map(x=>x.fondo),...arrGastos.map(x=>x.fondo).filter(Boolean),...tarjetas().map(x=>x.fondoAsociado).filter(Boolean)])].sort();
