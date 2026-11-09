@@ -829,10 +829,72 @@ function renderDetalleFinanciacion(){
     <div class="row"><span>Total del detalle por fechas</span><b>${cop(total)}</b></div>
     <div class="row"><span>Total presupuesto del resumen</span><b>${cop(fechasConPresupuesto().reduce((s,f)=>s+totalPresupuestoFecha(f)*tasaDia(f),0))}</b></div>
     <div class="row"><b>Diferencia</b><b>${cop(total-fechasConPresupuesto().reduce((s,f)=>s+totalPresupuestoFecha(f)*tasaDia(f),0))}</b></div>
+    <h3>¿Qué está pagado y qué sigue pendiente?</h3>
+    <p class="small">La tabla siguiente muestra los gastos registrados y los cruza por fecha, rubro y subcategoría con el presupuesto. La coincidencia es orientativa: no se descuenta automáticamente para evitar duplicar pagos o asignar un gasto al concepto equivocado.</p>
+    ${detalleEstadoPagosPresupuesto()}
+    <h3>Conciliación con reservas</h3>
+    ${detalleConciliacionReservas(total,disponibles,previstos)}
     <h3>Ingresos incluidos en el cálculo</h3>
     ${registros.length?`<div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Concepto</th><th>Estado</th><th>Valor COP</th></tr></thead><tbody>${ingresosFilas}<tr class="detalle-subtotal"><td colspan="3"><b>Total ingresos disponibles y previstos</b></td><td><b>${cop(disponibles+previstos)}</b></td></tr></tbody></table></div>`:'<p class="small">No hay ingresos registrados.</p>'}`;
 }
 
+// Auditoría de pagos y reservas: SOLO LECTURA. No altera registros ni importes.
+function detalleEstadoPagosPresupuesto(){
+  const gs=gastos();
+  const presupuestos=fechasConPresupuesto().sort().flatMap(fecha=>getPresupuestoLista(fecha).map(r=>({fecha,...r})));
+  const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
+  const grupo=(fecha,cat,sub)=>[fecha,norm(cat),norm(sub)].join('|');
+  const acumulados=new Map();
+  gs.forEach(g=>{
+    const k=grupo(g.fecha,g.categoria,g.subcategoria);
+    const arr=acumulados.get(k)||[];arr.push(g);acumulados.set(k,arr);
+  });
+  let sumaPres=0,sumaAsociada=0;
+  const claves=new Set();
+  const filas=presupuestos.map(r=>{
+    const k=grupo(r.fecha,r.categoria,r.subcategoria);claves.add(k);
+    const pagos=acumulados.get(k)||[];
+    const previsto=Number(r.valor||0)*tasaDia(r.fecha);
+    const pagado=pagos.reduce((s,g)=>s+Number(g.valorCOP||0),0);
+    sumaPres+=previsto;sumaAsociada+=pagado;
+    const pendiente=Math.max(0,previsto-pagado);
+    const descripcion=pagos.map(g=>escapeHTML(g.concepto||'Sin concepto')).join('; ');
+    return `<tr><td>${escapeHTML(r.fecha)}</td><td>${escapeHTML(r.categoria||'')}</td><td>${escapeHTML(r.subcategoria||'')}</td><td>${cop(previsto)}</td><td>${cop(pagado)}</td><td>${cop(pendiente)}</td><td>${pagos.length?descripcion:'Sin gasto coincidente'}</td></tr>`;
+  }).join('');
+  const sinCoincidencia=gs.filter(g=>!claves.has(grupo(g.fecha,g.categoria,g.subcategoria)));
+  const sinCoincidenciaCOP=sinCoincidencia.reduce((s,g)=>s+Number(g.valorCOP||0),0);
+  return `<div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Rubro</th><th>Subcategoría</th><th>Presupuestado COP</th><th>Gasto registrado coincidente COP</th><th>Saldo estimado COP</th><th>Concepto pagado</th></tr></thead><tbody>${filas||'<tr><td colspan="7">Sin presupuestos diarios</td></tr>'}<tr class="detalle-subtotal"><td colspan="3"><b>TOTAL</b></td><td><b>${cop(sumaPres)}</b></td><td><b>${cop(sumaAsociada)}</b></td><td><b>${cop(presupuestos.reduce((s,r)=>{const k=grupo(r.fecha,r.categoria,r.subcategoria);const p=(acumulados.get(k)||[]).reduce((a,g)=>a+Number(g.valorCOP||0),0);return s+Math.max(0,Number(r.valor||0)*tasaDia(r.fecha)-p);},0))}</b></td><td>Coincidencia por fecha y clasificación</td></tr></tbody></table></div>
+  <p class="small">Gastos registrados sin coincidencia exacta con un rubro presupuestado: <b>${cop(sinCoincidenciaCOP)}</b> (${sinCoincidencia.length} registros). Pueden corresponder a pagos anticipados, fechas diferentes o conceptos sin presupuestar. No se descuentan automáticamente.</p>
+  ${sinCoincidencia.length?`<details><summary>Ver gastos sin coincidencia (${sinCoincidencia.length})</summary><div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Rubro</th><th>Concepto</th><th>Valor COP</th></tr></thead><tbody>${sinCoincidencia.map(g=>`<tr><td>${escapeHTML(g.fecha||'')}</td><td>${escapeHTML(g.categoria||'')} / ${escapeHTML(g.subcategoria||'')}</td><td>${escapeHTML(g.concepto||'')}</td><td>${cop(Number(g.valorCOP||0))}</td></tr>`).join('')}</tbody></table></div></details>`:''}`;
+}
+function detalleConciliacionReservas(presupuestoDiarioCOP,disponibles,previstos){
+  const plan=planIntegralActual();const gs=gastos();
+  let planeado=0,pagado=0,pendiente=0;
+  const filas=plan.map((r,i)=>{
+    const p=importePlanCOP(r);
+    const vinculados=gs.filter(g=>String(g.planId??'')===String(i));
+    const v=vinculados.reduce((s,g)=>s+Number(g.valorCOP||0),0);
+    const falta=Math.max(0,p-v);
+    planeado+=p;pagado+=v;pendiente+=falta;
+    const estado=r.estadoPago||'Pendiente';
+    const alerta=estado==='Pagado'&&v===0?'Marcada pagada sin gasto vinculado':v>p?'Pagos superiores al planeado':(!p?'Sin cotizar':'');
+    return `<tr><td>${escapeHTML(r.fecha||'')}</td><td>${escapeHTML(r.concepto||'')}</td><td>${escapeHTML(estado)}</td><td>${cop(p)}</td><td>${cop(v)}</td><td>${cop(falta)}</td><td>${escapeHTML(alerta)}</td></tr>`;
+  }).join('');
+  const sinVincular=gs.filter(g=>g.planId===undefined||g.planId===null||String(g.planId)==='');
+  const sinVincularCOP=sinVincular.reduce((s,g)=>s+Number(g.valorCOP||0),0);
+  const recursos=disponibles+previstos;
+  const faltanteDiario=Math.max(0,presupuestoDiarioCOP-recursos);
+  return `<div class="row"><span>Presupuesto diario total</span><b>${cop(presupuestoDiarioCOP)}</b></div>
+  <div class="row"><span>Reservas planeadas (universo distinto)</span><b>${cop(planeado)}</b></div>
+  <div class="row"><span>Reservas pagadas y vinculadas</span><b>${cop(pagado)}</b></div>
+  <div class="row"><span>Reservas pendientes estimadas</span><b>${cop(pendiente)}</b></div>
+  <div class="row"><span>Ingresos disponibles + previstos</span><b>${cop(recursos)}</b></div>
+  <div class="row"><span>Por financiar según fórmula actual</span><b>${cop(faltanteDiario)}</b></div>
+  <div class="row"><b>Diferencia entre «Por financiar» y «Reservas pendientes» (no es dinero faltante adicional)</b><b>${cop(faltanteDiario-pendiente)}</b></div>
+  <p class="small"><b>Por qué no cruzan:</b> el presupuesto diario y el plan de reservas son dos conjuntos de registros que pueden superponerse. Además, «Por financiar» resta ingresos (incluso previstos), mientras que «Pendiente de reservas» resta solo gastos vinculados. La diferencia anterior es explicativa, no una deuda ni un valor que debas conseguir. No se deben sumar ambos saldos.</p>
+  <p class="small">Gastos sin reserva vinculada: <b>${cop(sinVincularCOP)}</b> (${sinVincular.length} registros). Una reserva marcada «Pagado» sin gasto vinculado no reduce su pendiente calculado.</p>
+  <details><summary>Ver reserva por reserva: qué está pagado y qué falta</summary><div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Reserva / concepto</th><th>Estado manual</th><th>Planeado COP</th><th>Pagado vinculado COP</th><th>Pendiente COP</th><th>Observación</th></tr></thead><tbody>${filas}<tr class="detalle-subtotal"><td colspan="3"><b>TOTAL RESERVAS</b></td><td><b>${cop(planeado)}</b></td><td><b>${cop(pagado)}</b></td><td><b>${cop(pendiente)}</b></td><td></td></tr></tbody></table></div></details>`;
+}
 function renderIngresos(arrGastos){
   const a=ingresos();
   document.getElementById('totalDetalleIngresosCOP').textContent=cop(a.reduce((s,x)=>s+Number(x.valorCOP||0),0));
