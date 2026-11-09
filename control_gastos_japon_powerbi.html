@@ -43,9 +43,22 @@ body.locked > :not(#vaultGate){display:none!important}
 .vaultpill{font-size:12px;color:#8ee2b8}
 select.compact{font-size:13px;padding:6px;min-width:120px}
 @media(max-width:560px){.fixed{flex-wrap:wrap}.fixed .btn{font-size:12px;padding:8px}}
+/* Public family portal: the financial dashboard remains encrypted and locked. */
+body.locked #familyPortal{display:flex!important}
+body.locked #vaultGate{display:none!important}
+body.locked.admin-login #familyPortal{display:none!important}
+body.locked.admin-login #vaultGate{display:block!important}
+#familyPortal{position:fixed;inset:0;z-index:9999;background:#0f1115;display:none;flex-direction:column}
+#familyPortal .familyBar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line)}
+#familyPortal iframe{border:0;width:100%;flex:1;background:white}
+#familyPortal .familyBar .btn{margin:0}
 </style>
 </head>
 <body class="locked">
+<div id="familyPortal" aria-label="Itinerario familiar de Japón">
+  <div class="familyBar"><strong>🇯🇵 Itinerario Japón</strong><button type="button" class="btn alt" onclick="abrirAccesoPrivado()">🔒 Acceso privado</button></div>
+  <iframe title="Itinerario de Japón" src="app_japon_estatica_visible.html" loading="eager"></iframe>
+</div>
 <div id="vaultGate" class="card"><h1>🔒 Control privado de gastos — Japón</h1>
 <p class="small" id="vaultInfo">Tus movimientos financieros se cifran en este navegador. Necesitarás tu contraseña cada vez que abras la aplicación.</p>
 <label>Contraseña privada (mínimo 12 caracteres)</label><input id="vaultPassword" type="password" autocomplete="off" placeholder="Escribe tu contraseña"/>
@@ -203,7 +216,7 @@ select.compact{font-size:13px;padding:6px;min-width:120px}
 <section class="card" id="control-reservas-pagadas">
 <h2>📌 Reservas: planeado, pagado y pendiente</h2>
 <p class="small">Marca el estado de cada reserva. Para calcular el <b>importe realmente pagado</b>, vincula el gasto correspondiente al concepto de la reserva al registrarlo (o desde la tabla de gastos). Marcar «Pagado» por sí solo no crea un gasto ni deuda en una tarjeta.</p>
-<div class="grid3"><div class="kpi"><b>Planificado ¥</b><div id="planKPI">¥0</div></div><div class="kpi"><b>Pagado vinculado ¥</b><div id="planPagadoKPI">¥0</div></div><div class="kpi"><b>Pendiente ¥</b><div id="planPendienteKPI">¥0</div></div></div>
+<div class="grid3"><div class="kpi"><b>Planificado</b><div id="planKPI">¥0</div><div class="small" id="planKPICOP">$0 COP</div></div><div class="kpi"><b>Pagado vinculado</b><div id="planPagadoKPI">¥0</div><div class="small" id="planPagadoKPICOP">$0 COP</div></div><div class="kpi"><b>Pendiente</b><div id="planPendienteKPI">¥0</div><div class="small" id="planPendienteKPICOP">$0 COP</div></div></div>
 <div id="listaEstadoPlan"></div>
 </section>
 <section class="card" id="registrar-gasto">
@@ -402,6 +415,8 @@ select.compact{font-size:13px;padding:6px;min-width:120px}
 <a class="btn alt" href="#backup-presupuesto">Respaldo</a>
 </div>
 <script>
+// Public itinerary is an unchanged, separate existing page. No finance state is exposed here.
+function abrirAccesoPrivado(){document.body.classList.add('admin-login');document.getElementById('vaultPassword').focus();}
 // Private vault. All jp_* data lives only in encrypted AES-GCM localStorage after unlock.
 const VAULT_STORAGE_KEY='jp_vault_cipher_v1';
 let vaultState={},vaultKey=null,vaultSalt=null,vaultRevision=0,vaultSavedRevision=0;
@@ -489,7 +504,7 @@ async function entrarVault(){
       for(const k of oldKeys)window.localStorage.removeItem(k);
     }
     document.getElementById('vaultPassword').value='';document.getElementById('vaultConfirm').value='';
-    document.body.classList.remove('locked');document.getElementById('vaultGate').style.display='none';
+    document.body.classList.remove('locked');document.body.classList.remove('admin-login');document.getElementById('familyPortal').style.display='none';document.getElementById('vaultGate').style.display='none';
     iniciarAplicacion();
   }catch(err){vaultKey=null;vaultState={};e.textContent='No fue posible desbloquear. Comprueba la contraseña y que no se hayan alterado los datos. '+(err.name==='QuotaExceededError'?'Almacenamiento lleno.':'');}
   finally{document.getElementById('vaultButton').disabled=false;}
@@ -1406,10 +1421,21 @@ function renderFinanzasNuevas(arr){
   document.getElementById('planKPI').textContent=yen(planTotal);
   document.getElementById('planPagadoKPI').textContent=yen(pagadoTotal);
   document.getElementById('planPendienteKPI').textContent=yen(pendiente);
+  // COP del presupuesto: importe original o tasa de la fecha de cada reserva.
+  // COP pagado: importe efectivamente registrado en los gastos vinculados.
+  const pagosVinculados=i=>arr.filter(g=>String(g.planId??'')===String(i));
+  const pagadoCOPPlan=i=>pagosVinculados(i).reduce((sum,g)=>sum+Number(g.valorCOP||0),0);
+  const planTotalCOP=plan.reduce((sum,x)=>sum+importePlanCOP(x),0);
+  const pagadoTotalCOP=plan.reduce((sum,_,i)=>sum+pagadoCOPPlan(i),0);
+  const pendienteTotalCOP=plan.reduce((sum,x,i)=>sum+Math.max(0,importePlanCOP(x)-pagadoCOPPlan(i)),0);
+  document.getElementById('planKPICOP').textContent=cop(planTotalCOP)+' COP';
+  document.getElementById('planPagadoKPICOP').textContent=cop(pagadoTotalCOP)+' COP';
+  document.getElementById('planPendienteKPICOP').textContent=cop(pendienteTotalCOP)+' COP';
   document.getElementById('listaEstadoPlan').innerHTML=plan.map((x,i)=>{
     const pagado=pagadoPlan(i);const falta=Math.max(0,Number(x.valor||0)-pagado);
+    const planCOP=importePlanCOP(x),pagadoCOP=pagadoCOPPlan(i),faltaCOP=Math.max(0,planCOP-pagadoCOP);
     const estado=x.estadoPago||'Pendiente';
-    return `<div class="budgetbox"><b>${escapeHTML(x.concepto)}</b><br><span class="small">Planeado ${yen(x.valor)} · Pagado registrado ${yen(pagado)} · Pendiente estimado ${yen(falta)} ${Number(x.valor)<=0?'· Falta cotizar':''}</span>
+    return `<div class="budgetbox"><b>${escapeHTML(x.concepto)}</b><br><span class="small">Planeado ${yen(x.valor)} / ${cop(planCOP)} COP · Pagado registrado ${yen(pagado)} / ${cop(pagadoCOP)} COP · Pendiente estimado ${yen(falta)} / ${cop(faltaCOP)} COP ${Number(x.valor)<=0?'· Falta cotizar':''}</span>
     <select class="compact" onchange="cambiarEstadoPlan(${i},this.value)">${['Pendiente','Parcial','Pagado'].map(v=>`<option value="${v}" ${v===estado?'selected':''}>${v}</option>`).join('')}</select>
     ${estado==='Pagado'&&pagado===0?'<span class="small over">Marcado pagado, pero falta registrar/vincular el gasto.</span>':''}</div>`;
   }).join('');
