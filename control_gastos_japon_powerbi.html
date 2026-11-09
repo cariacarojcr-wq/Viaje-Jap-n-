@@ -177,8 +177,8 @@ html{scroll-padding-top:14px;scroll-behavior:smooth}
 <select id="presupuestoSubcategoria"></select>
 </div>
 </div>
-<label>Presupuesto ¥</label>
-<input id="presupuestoValor" min="0" placeholder="Ej: 5000" type="number"/>
+<div class="grid2"><div><label>Presupuesto ¥</label>
+<input id="presupuestoValor" min="0" placeholder="Ej: 5000" type="number" oninput="actualizarEquivalentePresupuestoCOP()"/></div><div><label>Equivalente presupuesto COP</label><input id="presupuestoValorCOP" readonly type="text" placeholder="Se calcula automáticamente"/></div></div>
 <button class="btn ok" onclick="agregarPresupuestoRubro()">Agregar / actualizar rubro</button>
 <h3>Presupuesto cargado para este día</h3>
 <div id="presupuestoDetalleDia"></div>
@@ -681,14 +681,20 @@ function seleccionarFechaPresupuestoDia(){
   document.getElementById('fecha').dispatchEvent(new Event('change'));
 }
 
+function actualizarEquivalentePresupuestoCOP(){
+  const valor=Number(document.getElementById("presupuestoValor").value||0);
+  const destino=document.getElementById("presupuestoValorCOP");
+  if(destino)destino.value=valor>0?cop(valor*tasaDia(fechaActual())):"";
+}
 function cargarPresupuestoFecha(){
+  actualizarEquivalentePresupuestoCOP();
   document.getElementById('fechaPresupuestoDia').value=fechaActual();
   const lista=getPresupuestoLista(fechaActual());
   const total=lista.reduce((s,x)=>s+Number(x.valor||0),0);
   document.getElementById("presupuestoTotalDia").value=total||"";
   document.getElementById("presupuestoTotalDiaCOP").value=total?Math.round(total*getTRM()):"";
   document.getElementById("presupuestoDetalleDia").innerHTML=lista.length
-    ?lista.map((x,i)=>`<div class="row"><div><b>${x.categoria}</b><br><span class="small">${x.subcategoria}</span></div><div><b>${yen(x.valor)}</b><br><button class="btn red" onclick="eliminarPresupuestoRubro(${i})">Eliminar</button></div></div>`).join("")
+    ?lista.map((x,i)=>`<div class="row"><div><b>${x.categoria}</b><br><span class="small">${x.subcategoria}</span></div><div><b>${yen(x.valor)}</b><br><span class="small">${cop(Number(x.valor||0)*tasaDia(fechaActual()))} COP</span><br><button class="btn red" onclick="eliminarPresupuestoRubro(${i})">Eliminar</button></div></div>`).join("")
     :"<p class='mut'>Aún no has cargado presupuesto para este día.</p>";
 }
 
@@ -710,6 +716,7 @@ function agregarPresupuestoRubro(){
   secureStore.removeItem(presupuestoKeyDetalleAnterior(fecha));
   secureStore.removeItem(presupuestoKeyVieja(fecha));
   document.getElementById("presupuestoValor").value="";
+  actualizarEquivalentePresupuestoCOP();
   cargarPresupuestoFecha();
   render();
 }
@@ -859,11 +866,25 @@ function detalleEstadoPagosPresupuesto(){
     sumaPres+=previsto;sumaAsociada+=pagado;
     const pendiente=Math.max(0,previsto-pagado);
     const descripcion=pagos.map(g=>escapeHTML(g.concepto||'Sin concepto')).join('; ');
-    return `<tr><td>${escapeHTML(r.fecha)}</td><td>${escapeHTML(r.categoria||'')}</td><td>${escapeHTML(r.subcategoria||'')}</td><td>${cop(previsto)}</td><td>${cop(pagado)}</td><td>${cop(pendiente)}</td><td>${pagos.length?descripcion:'Sin gasto coincidente'}</td></tr>`;
+    return `<tr><td>${escapeHTML(r.fecha)}</td><td>${escapeHTML(r.categoria||'')}</td><td>${escapeHTML(r.subcategoria||'')}</td><td>${cop(previsto)}</td><td>${cop(pagado)}</td><td>${cop(pendiente)}</td><td>${pagos.length?descripcion:'Sin gasto coincidente (no prueba que esté sin pagar)'}</td></tr>`;
   }).join('');
+  // Las reservas marcadas pagadas son declaraciones de estado, NO pagos acreditados.
+  // Mostrar la diferencia sin alterar cálculos ni descontar pagos por segunda vez.
+  const toursMarcadosPagados=planIntegralActual().map((r,i)=>({r,i})).filter(({r})=>
+    norm(r.categoria)==='tours y excursiones' && r.estadoPago==='Pagado');
+  const auditoriaTours=toursMarcadosPagados.length
+    ? `<details open><summary><b>Tours y excursiones marcados como pagados: verificar vínculo</b></summary>
+       <p class="small">El estado «Pagado» es manual. No equivale a un gasto registrado y vinculado. Por eso un tour puede aparecer como pagado en Reservas, pero seguir con saldo estimado en el presupuesto diario. No se descontará dos veces.</p>
+       <div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Tour / concepto</th><th>Estado</th><th>Presupuesto COP</th><th>Gasto vinculado COP</th><th>Diagnóstico</th></tr></thead><tbody>${toursMarcadosPagados.map(({r,i})=>{
+         const vinculados=gs.filter(g=>String(g.planId??'')===String(i));
+         const suma=vinculados.reduce((a,g)=>a+Number(g.valorCOP||0),0);
+         return `<tr><td>${escapeHTML(r.fecha||'')}</td><td>${escapeHTML(r.concepto||'')}</td><td>Pagado (manual)</td><td>${cop(importePlanCOP(r))}</td><td>${cop(suma)}</td><td>${suma>0?'Con gasto vinculado':'Sin gasto vinculado: requiere conciliación, no necesariamente pago pendiente'}</td></tr>`;
+       }).join('')}</tbody></table></div></details>`
+    : '';
   const sinCoincidencia=gs.filter(g=>!claves.has(grupo(g.fecha,g.categoria,g.subcategoria)));
   const sinCoincidenciaCOP=sinCoincidencia.reduce((s,g)=>s+Number(g.valorCOP||0),0);
   return `<div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Rubro</th><th>Subcategoría</th><th>Presupuestado COP</th><th>Gasto registrado coincidente COP</th><th>Saldo estimado COP</th><th>Concepto pagado</th></tr></thead><tbody>${filas||'<tr><td colspan="7">Sin presupuestos diarios</td></tr>'}<tr class="detalle-subtotal"><td colspan="3"><b>TOTAL</b></td><td><b>${cop(sumaPres)}</b></td><td><b>${cop(sumaAsociada)}</b></td><td><b>${cop(presupuestos.reduce((s,r)=>{const k=grupo(r.fecha,r.categoria,r.subcategoria);const p=(acumulados.get(k)||[]).reduce((a,g)=>a+Number(g.valorCOP||0),0);return s+Math.max(0,Number(r.valor||0)*tasaDia(r.fecha)-p);},0))}</b></td><td>Coincidencia por fecha y clasificación</td></tr></tbody></table></div>
+  ${auditoriaTours}
   <p class="small">Gastos registrados sin coincidencia exacta con un rubro presupuestado: <b>${cop(sinCoincidenciaCOP)}</b> (${sinCoincidencia.length} registros). Pueden corresponder a pagos anticipados, fechas diferentes o conceptos sin presupuestar. No se descuentan automáticamente.</p>
   ${sinCoincidencia.length?`<details><summary>Ver gastos sin coincidencia (${sinCoincidencia.length})</summary><div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Rubro</th><th>Concepto</th><th>Valor COP</th></tr></thead><tbody>${sinCoincidencia.map(g=>`<tr><td>${escapeHTML(g.fecha||'')}</td><td>${escapeHTML(g.categoria||'')} / ${escapeHTML(g.subcategoria||'')}</td><td>${escapeHTML(g.concepto||'')}</td><td>${cop(Number(g.valorCOP||0))}</td></tr>`).join('')}</tbody></table></div></details>`:''}`;
 }
