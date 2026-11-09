@@ -160,6 +160,9 @@ html{scroll-padding-top:14px;scroll-behavior:smooth}
 <h2>💰 Presupuesto del día</h2>
 <label>Fecha del presupuesto</label>
 <input id="fechaPresupuestoDia" type="date" onchange="seleccionarFechaPresupuestoDia()"/>
+<label for="tasaPresupuestoDia">Tasa de cambio del día — COP por ¥1</label>
+<input id="tasaPresupuestoDia" type="text" inputmode="decimal" placeholder="Ej: 30,50" oninput="actualizarTasaDesdePresupuestoDia()"/>
+<span class="small">Es la misma tasa de Configuración para la fecha seleccionada. Al cambiarla aquí, se guarda para ese día y se recalculan los equivalentes en COP.</span>
 <div class="grid2">
 <div>
 <label>Rubro / Categoría</label>
@@ -681,12 +684,23 @@ function seleccionarFechaPresupuestoDia(){
   document.getElementById('fecha').dispatchEvent(new Event('change'));
 }
 
+function actualizarTasaDesdePresupuestoDia(){
+  const campo=document.getElementById('tasaPresupuestoDia');
+  const valor=parseNumeroFlexible(campo.value);
+  if(!Number.isFinite(valor)||valor<=0)return;
+  const config=document.getElementById('trm');
+  config.value=String(valor);
+  config.dispatchEvent(new Event('input',{bubbles:true}));
+}
+
 function actualizarEquivalentePresupuestoCOP(){
   const valor=Number(document.getElementById("presupuestoValor").value||0);
   const destino=document.getElementById("presupuestoValorCOP");
   if(destino)destino.value=valor>0?cop(valor*tasaDia(fechaActual())):"";
 }
 function cargarPresupuestoFecha(){
+  const tasaPresupuesto=document.getElementById('tasaPresupuestoDia');
+  if(tasaPresupuesto)tasaPresupuesto.value=String(tasaDia(fechaActual()));
   actualizarEquivalentePresupuestoCOP();
   document.getElementById('fechaPresupuestoDia').value=fechaActual();
   const lista=getPresupuestoLista(fechaActual());
