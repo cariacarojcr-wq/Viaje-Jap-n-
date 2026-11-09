@@ -797,30 +797,42 @@ function renderDetalleFinanciacion(){
   const disponibles=registros.filter(x=>x.estado==='Disponible').reduce((s,x)=>s+Number(x.valorCOP||0),0);
   const previstos=registros.filter(x=>x.estado==='Previsto').reduce((s,x)=>s+Number(x.valorCOP||0),0);
   const fechas=fechasConPresupuesto().sort();
-  const presupuestos=fechas.map(f=>({fecha:f,jpy:totalPresupuestoFecha(f),tasa:tasaDia(f)}));
-  const total=presupuestos.reduce((s,x)=>s+x.jpy*x.tasa,0);
-  const cobertura=disponibles+previstos-total;
+  // Usar los mismos rubros y la misma tasa del indicador principal, sin duplicar subtotales.
+  const presupuestos=fechas.map(fecha=>{
+    const rubros=getPresupuestoLista(fecha);
+    const tasa=tasaDia(fecha);
+    const jpy=rubros.reduce((s,r)=>s+Number(r.valor||0),0);
+    return {fecha,rubros,tasa,jpy,cop:jpy*tasa};
+  });
+  const total=presupuestos.reduce((s,x)=>s+x.cop,0);
+  const totalJPY=presupuestos.reduce((s,x)=>s+x.jpy,0);
+  const porFinanciar=Math.max(0,total-disponibles-previstos);
   const filas=presupuestos.flatMap(x=>{
-    const rubros=getPresupuestoLista(x.fecha);
-    if(!rubros.length)return [];
-    const detalle=rubros.map(r=>{
+    if(!x.rubros.length)return [];
+    const detalle=x.rubros.map(r=>{
       const valor=Number(r.valor||0);
       return `<tr><td>${escapeHTML(x.fecha)}</td><td>${escapeHTML(r.categoria||'Sin categoría')}</td><td>${escapeHTML(r.subcategoria||'Sin subcategoría')}</td><td>${yen(valor)}</td><td>${cop(x.tasa)} / ¥</td><td>${cop(valor*x.tasa)}</td></tr>`;
     });
-    detalle.push(`<tr class="detalle-subtotal"><td><b>${escapeHTML(x.fecha)}</b></td><td colspan="2"><b>Total del día</b></td><td><b>${yen(x.jpy)}</b></td><td></td><td><b>${cop(x.jpy*x.tasa)}</b></td></tr>`);
+    detalle.push(`<tr class="detalle-subtotal"><td><b>${escapeHTML(x.fecha)}</b></td><td colspan="2"><b>Subtotal del día (no sumar dos veces)</b></td><td><b>${yen(x.jpy)}</b></td><td></td><td><b>${cop(x.cop)}</b></td></tr>`);
     return detalle;
   }).join('');
+  const ingresosFilas=registros.map(x=>`<tr><td>${escapeHTML(x.fecha||'')}</td><td>${escapeHTML(x.concepto||'')}</td><td>${escapeHTML(x.estado||'')}</td><td>${cop(x.valorCOP)}</td></tr>`).join('');
   panel.innerHTML=`<h3>Detalle de por financiar</h3>
-    <div class="row"><span>Presupuesto total de las fechas registradas</span><b>${cop(total)}</b></div>
+    <div class="row"><span>Presupuesto total (suma de rubros por fecha)</span><b>${cop(total)}</b></div>
     <div class="row"><span>(−) Ingresos disponibles</span><b>${cop(disponibles)}</b></div>
     <div class="row"><span>(−) Ingresos previstos</span><b>${cop(previstos)}</b></div>
-    <div class="row"><b>Por financiar</b><b>${cop(Math.max(0,-cobertura))}</b></div>
-    <p class="small">Se suman los presupuestos diarios guardados y se restan los ingresos disponibles y previstos. Los ingresos previstos cuentan para la cobertura, aunque aún no estén recibidos. Los gastos ya pagados no se descuentan de nuevo.</p>
-    <h3>Presupuesto por fecha</h3>
-    ${filas?`<div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Rubro</th><th>Subcategoría</th><th>Presupuesto ¥</th><th>Tasa COP/¥</th><th>Presupuesto COP</th></tr></thead><tbody>${filas}</tbody></table></div>`:'<p class="small">No hay presupuestos diarios guardados; por eso no hay importes que sumar. Revisa las fechas en Presupuesto del día.</p>'}
+    <div class="row"><b>Por financiar</b><b>${cop(porFinanciar)}</b></div>
+    <p class="small">El total del detalle debe coincidir con el presupuesto del resumen. «Por financiar» no es el total del presupuesto: es el saldo después de descontar ingresos disponibles y previstos, con mínimo cero. Los subtotales diarios son informativos y no se suman dos veces.</p>
+    <h3>Presupuesto por fecha y rubro</h3>
+    ${filas?`<div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Rubro</th><th>Subcategoría</th><th>Presupuesto ¥</th><th>Tasa COP/¥</th><th>Presupuesto COP</th></tr></thead><tbody>${filas}<tr class="detalle-subtotal"><td colspan="3"><b>TOTAL GENERAL DEL PRESUPUESTO (suma de días)</b></td><td><b>${yen(totalJPY)}</b></td><td>—</td><td><b>${cop(total)}</b></td></tr></tbody></table></div>`:'<p class="small">No hay presupuestos diarios guardados; por eso no hay importes que sumar. Revisa las fechas en Presupuesto del día.</p>'}
+    <h3>Conciliación</h3>
+    <div class="row"><span>Total del detalle por fechas</span><b>${cop(total)}</b></div>
+    <div class="row"><span>Total presupuesto del resumen</span><b>${cop(fechasConPresupuesto().reduce((s,f)=>s+totalPresupuestoFecha(f)*tasaDia(f),0))}</b></div>
+    <div class="row"><b>Diferencia</b><b>${cop(total-fechasConPresupuesto().reduce((s,f)=>s+totalPresupuestoFecha(f)*tasaDia(f),0))}</b></div>
     <h3>Ingresos incluidos en el cálculo</h3>
-    ${registros.length?`<div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Concepto</th><th>Estado</th><th>Valor COP</th></tr></thead><tbody>${registros.map(x=>`<tr><td>${escapeHTML(x.fecha||'')}</td><td>${escapeHTML(x.concepto||'')}</td><td>${escapeHTML(x.estado||'')}</td><td>${cop(x.valorCOP)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="small">No hay ingresos registrados.</p>'}`;
+    ${registros.length?`<div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Concepto</th><th>Estado</th><th>Valor COP</th></tr></thead><tbody>${ingresosFilas}<tr class="detalle-subtotal"><td colspan="3"><b>Total ingresos disponibles y previstos</b></td><td><b>${cop(disponibles+previstos)}</b></td></tr></tbody></table></div>`:'<p class="small">No hay ingresos registrados.</p>'}`;
 }
+
 function renderIngresos(arrGastos){
   const a=ingresos();
   document.getElementById('totalDetalleIngresosCOP').textContent=cop(a.reduce((s,x)=>s+Number(x.valorCOP||0),0));
