@@ -1056,6 +1056,37 @@ function renderGroup(obj,elid){
     :"<p class='mut'>Sin datos.</p>";
 }
 
+function renderResumenCategoriasCompleto(arr){
+  const categorias=new Map();
+  function obtener(nombre){
+    const clave=String(nombre||'Sin asignar');
+    if(!categorias.has(clave)) categorias.set(clave,{presJPY:0,presCOP:0,realJPY:0,realCOP:0});
+    return categorias.get(clave);
+  }
+  fechasConPresupuesto().forEach(fecha=>{
+    getPresupuestoLista(fecha).forEach(partida=>{
+      const fila=obtener(partida.categoria);
+      fila.presJPY+=Number(partida.valor||0);
+      fila.presCOP+=presupuestoPartidaCOP(partida,fecha);
+    });
+  });
+  arr.forEach(gasto=>{
+    const fila=obtener(gasto.categoria);
+    fila.realJPY+=Number(gasto.valorYen||0);
+    fila.realCOP+=Number(gasto.valorCOP||0);
+  });
+  const total={presJPY:0,presCOP:0,realJPY:0,realCOP:0};
+  const filas=[...categorias.entries()].sort((a,b)=>a[0].localeCompare(b[0],'es'));
+  filas.forEach(([,v])=>Object.keys(total).forEach(k=>total[k]+=v[k]));
+  const el=document.getElementById('resumenCategorias');
+  el.innerHTML=filas.length ? filas.map(([nombre,v])=>
+    `<div class="row"><div><b>${escapeHTML(nombre)}</b><br><span class="small">Presupuestado: ${yen(v.presJPY)} · ${cop(v.presCOP)}<br>Gastos registrados: ${yen(v.realJPY)} · ${cop(v.realCOP)}</span></div></div>`
+  ).join('')+`<div class="row"><div><b>TOTAL PRESUPUESTADO</b></div><b>${yen(total.presJPY)}<br><span class="small">${cop(total.presCOP)}</span></b></div>`+
+  `<div class="row"><div><b>TOTAL GASTOS REGISTRADOS</b></div><b>${yen(total.realJPY)}<br><span class="small">${cop(total.realCOP)}</span></b></div>`+
+  `<p class="small mut">Los gastos registrados incluyen compras con tarjeta aunque todavía no se haya pagado el extracto. Las reservas marcadas como pagadas sin un gasto registrado no se suman aquí para evitar duplicaciones.</p>`
+  :"<p class='mut'>Sin presupuestos ni gastos registrados.</p>";
+}
+
 function fechasConPresupuesto(){
   const fechas=new Set(FECHAS_VIAJE);
   secureStore.keys().forEach(k=>{
@@ -1192,7 +1223,7 @@ function render(){
   renderPresupuestoRubros(arr);
   renderComparativoDia(arr,fecha);
   renderResumenDias(arr);
-  renderGroup(groupBy(arr,"categoria"),"resumenCategorias");
+  renderResumenCategoriasCompleto(arr);
   renderGroup(groupBy(arr,"medioPago"),"resumenMedios");
   renderGroup(groupBy(arr,"pagadoPor"),"resumenPagadoPor");
   renderIngresos(arr);
@@ -1355,8 +1386,36 @@ function partidaDiariaCorrespondiente(x){
   // Never infer a match if it is ambiguous.
   return matches.length===1?matches[0]:null;
 }
+function filasTransporteReservas(){
+  return BASE_TRANSPORTE_2026.filter(x=>Number(x.pp)>0 || getPresupuestoLista(x.fecha).some(r=>r.categoria==='Transporte'&&r.subcategoria==='General')).map(x=>{
+    const r=getPresupuestoLista(x.fecha).find(r=>r.categoria==='Transporte'&&r.subcategoria==='General');
+    const valor=r?Number(r.valor||0):Number(x.pp||0)*5;
+    const tasa=r?tasaPartidaPresupuesto(r,x.fecha):tasaDia(x.fecha);
+    return {fecha:x.fecha,categoria:'Transporte',subcategoria:'General',concepto:'Transporte '+x.fecha.slice(5)+' · '+x.nota,
+      valor,tasaPlanCOPJPY:tasa,valorCOPPlan:r?presupuestoPartidaCOP(r,x.fecha):valor*tasa,
+      _transporteReserva:true,estadoPago:'Pendiente'};
+  });
+}
+function editarTransporteReserva(fecha){
+  const lista=getPresupuestoLista(fecha);
+  const idx=lista.findIndex(r=>r.categoria==='Transporte'&&r.subcategoria==='General');
+  const base=BASE_TRANSPORTE_2026.find(x=>x.fecha===fecha);
+  const previo=idx>=0?lista[idx]:{valor:Number(base?.pp||0)*5,tasaCOPJPY:tasaDia(fecha)};
+  const valorTexto=prompt('Transporte '+fecha+' — presupuesto total para el grupo en JPY:',String(previo.valor||0));
+  if(valorTexto===null)return;
+  const valor=Number(valorTexto.replace(',','.'));
+  if(!Number.isFinite(valor)||valor<0){alert('Escribe un importe JPY válido.');return;}
+  const tasaTexto=prompt('Tasa individual de este transporte: COP por ¥1:',String(tasaPartidaPresupuesto(previo,fecha)));
+  if(tasaTexto===null)return;
+  const tasa=Number(tasaTexto.replace(',','.'));
+  if(!Number.isFinite(tasa)||tasa<=0){alert('Escribe una tasa COP/JPY válida.');return;}
+  const actualizado={...previo,categoria:'Transporte',subcategoria:'General',valor,tasaCOPJPY:tasa};
+  if(idx>=0)lista[idx]=actualizado;else lista.push(actualizado);
+  setPresupuestoLista(fecha,lista);
+  cargarPresupuestoFecha();render();mostrarCostosIntegrales();
+}
 function planIntegralParaMostrar(){
-  return planIntegralActual().map(x=>{
+  const principales=planIntegralActual().map(x=>{
     const r=partidaDiariaCorrespondiente(x);
     if(!r)return x;
     const tasa=tasaPartidaPresupuesto(r,x.fecha);
@@ -1364,6 +1423,7 @@ function planIntegralParaMostrar(){
       monedaPlan:'JPY',importeOriginalPlan:Number(r.valor||0),
       valorCOPPlan:presupuestoPartidaCOP(r,x.fecha),_origenPresupuestoDia:true};
   });
+  return principales.concat(filasTransporteReservas());
 }
 // Planning rows keep the original currency and exchange rate, without changing
 // the historical yen-based dashboard or overwriting existing planned amounts.
@@ -1386,13 +1446,13 @@ function resumenTotalesPlanEnPantalla(){
     totalJPY+=j;totalCOP+=c;
     if(j<=0)pendientes++;
   });
-  const tJPY=BASE_TRANSPORTE_2026.reduce((sum,x)=>sum+Number(x.pp||0)*5,0);
-  const tCOP=totalTransporteCOP5();
+  const tJPY=rows.filter(x=>x._transporteReserva).reduce((sum,x)=>sum+Number(x.valor||0),0);
+  const tCOP=rows.filter(x=>x._transporteReserva).reduce((sum,x)=>sum+importePlanCOP(x),0);
   document.getElementById('pendientesPresupuesto').textContent=String(pendientes);
   document.getElementById('resumenPlanDobleMoneda').innerHTML=
     `<div class="grid2"><div class="kpi"><b>Rubros del grupo (5) · JPY</b><div>${yen(totalJPY)}</div></div><div class="kpi"><b>Rubros del grupo (5) · COP</b><div>${cop(totalCOP)}</div></div>
-    <div class="kpi"><b>Grupo + transporte · JPY</b><div>${yen(totalJPY+tJPY)}</div></div><div class="kpi"><b>Grupo + transporte · COP</b><div>${cop(totalCOP+tCOP)}</div></div></div>
-    <p class="small">El transporte base (5 adultos) se añade una sola vez: ${yen(tJPY)} · ${cop(tCOP)}. Importes sin cotizar no están incluidos. El total en COP suma cada rubro a su propia tasa; no aplica una sola tasa global.</p>`;
+    <div class="kpi"><b>Total con transporte · JPY</b><div>${yen(totalJPY)}</div></div><div class="kpi"><b>Total con transporte · COP</b><div>${cop(totalCOP)}</div></div></div>
+    <p class="small">Transporte incluido una sola vez: ${yen(tJPY)} · ${cop(tCOP)}. Importes sin cotizar no están incluidos. El total en COP suma cada rubro a su propia tasa; no aplica una sola tasa global.</p>`;
 }
 function sincronizarPlanIntegral(i,moneda){
   const y=document.getElementById('integralValor_'+i),p=document.getElementById('integralCOP_'+i),t=document.getElementById('integralTasa_'+i);
@@ -1419,11 +1479,11 @@ function mostrarCostosIntegrales(){
     return `<div class="budgetbox" id="integralFila_${i}" ${x.subcategoria==='Rápido y Furioso'?'data-tour="16d"':''} data-moneda="${x.monedaPlan==='COP'?'COP':'JPY'}">
       ${x.subcategoria==='Rápido y Furioso'?'<div id="tourRapidoFuriosoPlan"><b>🏎️ TOUR DEL 16 DE DICIEMBRE · 5 ADULTOS</b></div>':''}
       <b>${escapeHTML(x.concepto)}</b><br><span class="small">${escapeHTML(x.fecha.slice(5))} · ${escapeHTML(x.categoria)} · ${escapeHTML(x.nota)}</span>
-      <div class="grid2"><div><label>Total 5 adultos · ¥ JPY</label><input aria-label="Total en yenes: ${escapeHTML(x.concepto)}" id="integralValor_${i}" ${x._origenPresupuestoDia?'readonly title="Se actualiza desde Presupuesto del día"':''} type="number" min="0" step="any" inputmode="decimal" value="${Number(x.valor||0)}" oninput="sincronizarPlanIntegral(${i},'JPY')"/></div>
-      <div><label>Total 5 adultos · $ COP</label><input aria-label="Total en pesos: ${escapeHTML(x.concepto)}" id="integralCOP_${i}" ${x._origenPresupuestoDia?'readonly title="Se actualiza desde Presupuesto del día"':''} type="number" min="0" step="any" inputmode="decimal" value="${Math.round(copPlan*100)/100}" oninput="sincronizarPlanIntegral(${i},'COP')"/></div></div>
+      <div class="grid2"><div><label>Total 5 adultos · ¥ JPY</label><input aria-label="Total en yenes: ${escapeHTML(x.concepto)}" id="integralValor_${i}" ${(x._origenPresupuestoDia||x._transporteReserva)?'readonly title="Se actualiza desde Presupuesto del día"':''} type="number" min="0" step="any" inputmode="decimal" value="${Number(x.valor||0)}" oninput="sincronizarPlanIntegral(${i},'JPY')"/></div>
+      <div><label>Total 5 adultos · $ COP</label><input aria-label="Total en pesos: ${escapeHTML(x.concepto)}" id="integralCOP_${i}" ${(x._origenPresupuestoDia||x._transporteReserva)?'readonly title="Se actualiza desde Presupuesto del día"':''} type="number" min="0" step="any" inputmode="decimal" value="${Math.round(copPlan*100)/100}" oninput="sincronizarPlanIntegral(${i},'COP')"/></div></div>
       <label>Tasa para este rubro (COP por ¥1) · ${escapeHTML(x.fecha)}</label>
-      <input id="integralTasa_${i}" ${x._origenPresupuestoDia?'readonly title="Se actualiza desde Presupuesto del día"':''} type="number" min="0.000001" step="any" inputmode="decimal" value="${rate}" oninput="sincronizarPlanIntegral(${i},'TASA')"/>
-      ${x._origenPresupuestoDia?'<span class="small">Sincronizado automáticamente con Presupuesto del día. Para cambiar el valor o la TRM, edita esa partida allí.</span>':''}
+      <input id="integralTasa_${i}" ${(x._origenPresupuestoDia||x._transporteReserva)?'readonly title="Se actualiza desde Presupuesto del día"':''} type="number" min="0.000001" step="any" inputmode="decimal" value="${rate}" oninput="sincronizarPlanIntegral(${i},'TASA')"/>
+      ${(x._origenPresupuestoDia||x._transporteReserva)?'<span class="small">Sincronizado automáticamente con Presupuesto del día. Para cambiar el valor o la TRM, edita esa partida allí.</span>':''}
       <span class="small">Escribe en cualquiera de las dos monedas. La otra se actualiza automáticamente. Guarda para conservar el valor y la tasa.</span>
     </div>`;
   }).join('');
@@ -1461,8 +1521,8 @@ function cargarPresupuestoIntegral5(){
     let lista=getPresupuestoLista(x.fecha);
     const idx=lista.findIndex(r=>r.categoria==='Transporte' && r.subcategoria==='General');
     const valor=Number(x.pp||0)*5;
-    if(valor>0){if(idx>=0)lista[idx].valor=valor;else lista.push({categoria:'Transporte',subcategoria:'General',valor});}
-    else if(idx>=0)lista.splice(idx,1);
+    if(valor>0 && idx<0)lista.push({categoria:'Transporte',subcategoria:'General',valor,tasaCOPJPY:tasaDia(x.fecha)});
+    // Conservar cualquier partida de transporte editada manualmente.
     setPresupuestoLista(x.fecha,lista);
   });
   plan.forEach(x=>{
@@ -1642,7 +1702,8 @@ function renderFinanzasNuevas(arr){
     const planCOP=importePlanCOP(x),pagadoCOP=pagadoCOPPlan(i),faltaCOP=Math.max(0,planCOP-pagadoCOP);
     const estado=x.estadoPago||'Pendiente';
     return `<div class="budgetbox"><b>${escapeHTML(x.concepto)}</b><br><span class="small">Planeado ${yen(x.valor)} / ${cop(planCOP)} COP · Pagado registrado ${yen(pagado)} / ${cop(pagadoCOP)} COP · Pendiente estimado ${yen(falta)} / ${cop(faltaCOP)} COP ${Number(x.valor)<=0?'· Falta cotizar':''}</span>
-    <select class="compact" onchange="cambiarEstadoPlan(${i},this.value)">${['Pendiente','Parcial','Pagado'].map(v=>`<option value="${v}" ${v===estado?'selected':''}>${v}</option>`).join('')}</select>
+    ${x._transporteReserva?'<span class="small">Estado: según gastos vinculados; no se crea un pago automáticamente.</span>':`<select class="compact" onchange="cambiarEstadoPlan(${i},this.value)">${['Pendiente','Parcial','Pagado'].map(v=>`<option value="${v}" ${v===estado?'selected':''}>${v}</option>`).join('')}</select>`}
+    ${x._transporteReserva?`<button class="btn alt" onclick="editarTransporteReserva('${x.fecha}')">Editar transporte y TRM</button>`:''}
     ${estado==='Pagado'&&pagado===0?'<span class="small over">Marcado pagado, pero falta registrar/vincular el gasto.</span>':''}</div>`;
   }).join('');
 }
