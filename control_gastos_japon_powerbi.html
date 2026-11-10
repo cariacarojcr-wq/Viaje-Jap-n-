@@ -751,6 +751,7 @@ function agregarPresupuestoRubro(){
   document.getElementById("presupuestoValor").value="";
   actualizarEquivalentePresupuestoCOP();
   cargarPresupuestoFecha();
+  mostrarCostosIntegrales();
   render();
 }
 
@@ -922,7 +923,7 @@ function detalleEstadoPagosPresupuesto(){
   ${sinCoincidencia.length?`<details><summary>Ver gastos sin coincidencia (${sinCoincidencia.length})</summary><div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Rubro</th><th>Concepto</th><th>Valor COP</th></tr></thead><tbody>${sinCoincidencia.map(g=>`<tr><td>${escapeHTML(g.fecha||'')}</td><td>${escapeHTML(g.categoria||'')} / ${escapeHTML(g.subcategoria||'')}</td><td>${escapeHTML(g.concepto||'')}</td><td>${cop(Number(g.valorCOP||0))}</td></tr>`).join('')}</tbody></table></div></details>`:''}`;
 }
 function detalleConciliacionReservas(presupuestoDiarioCOP,disponibles,previstos){
-  const plan=planIntegralActual();const gs=gastos();
+  const plan=planIntegralParaMostrar();const gs=gastos();
   let planeado=0,pagado=0,pendiente=0;
   const filas=plan.map((r,i)=>{
     const p=importePlanCOP(r);
@@ -1347,6 +1348,23 @@ function planIntegralActual(){
   }catch(e){}
   return PLAN_INTEGRAL_5.map(x=>({...x}));
 }
+// Single source of truth for matched planned items: Presupuesto del día.
+// No migration, no writes and no modification of real payments.
+function partidaDiariaCorrespondiente(x){
+  const matches=getPresupuestoLista(x.fecha).filter(r=>r.categoria===x.categoria && r.subcategoria===x.subcategoria);
+  // Never infer a match if it is ambiguous.
+  return matches.length===1?matches[0]:null;
+}
+function planIntegralParaMostrar(){
+  return planIntegralActual().map(x=>{
+    const r=partidaDiariaCorrespondiente(x);
+    if(!r)return x;
+    const tasa=tasaPartidaPresupuesto(r,x.fecha);
+    return {...x,valor:Number(r.valor||0),tasaPlanCOPJPY:tasa,
+      monedaPlan:'JPY',importeOriginalPlan:Number(r.valor||0),
+      valorCOPPlan:presupuestoPartidaCOP(r,x.fecha),_origenPresupuestoDia:true};
+  });
+}
 // Planning rows keep the original currency and exchange rate, without changing
 // the historical yen-based dashboard or overwriting existing planned amounts.
 function importePlanCOP(x){
@@ -1358,7 +1376,7 @@ function totalTransporteCOP5(){
   return BASE_TRANSPORTE_2026.reduce((s,x)=>s+Number(x.pp||0)*5*tasaDia(x.fecha),0);
 }
 function resumenTotalesPlanEnPantalla(){
-  const rows=planIntegralActual();
+  const rows=planIntegralParaMostrar();
   let totalJPY=0,totalCOP=0,pendientes=0;
   rows.forEach((x,i)=>{
     const y=document.getElementById('integralValor_'+i);
@@ -1394,17 +1412,18 @@ function sincronizarPlanIntegral(i,moneda){
   resumenTotalesPlanEnPantalla();
 }
 function mostrarCostosIntegrales(){
-  const plan=planIntegralActual();
+  const plan=planIntegralParaMostrar();
   const table=plan.map((x,i)=>{
     const rate=Number(x.tasaPlanCOPJPY)>0?Number(x.tasaPlanCOPJPY):tasaDia(x.fecha);
     const copPlan=importePlanCOP(x);
     return `<div class="budgetbox" id="integralFila_${i}" ${x.subcategoria==='Rápido y Furioso'?'data-tour="16d"':''} data-moneda="${x.monedaPlan==='COP'?'COP':'JPY'}">
       ${x.subcategoria==='Rápido y Furioso'?'<div id="tourRapidoFuriosoPlan"><b>🏎️ TOUR DEL 16 DE DICIEMBRE · 5 ADULTOS</b></div>':''}
       <b>${escapeHTML(x.concepto)}</b><br><span class="small">${escapeHTML(x.fecha.slice(5))} · ${escapeHTML(x.categoria)} · ${escapeHTML(x.nota)}</span>
-      <div class="grid2"><div><label>Total 5 adultos · ¥ JPY</label><input aria-label="Total en yenes: ${escapeHTML(x.concepto)}" id="integralValor_${i}" type="number" min="0" step="any" inputmode="decimal" value="${Number(x.valor||0)}" oninput="sincronizarPlanIntegral(${i},'JPY')"/></div>
-      <div><label>Total 5 adultos · $ COP</label><input aria-label="Total en pesos: ${escapeHTML(x.concepto)}" id="integralCOP_${i}" type="number" min="0" step="any" inputmode="decimal" value="${Math.round(copPlan*100)/100}" oninput="sincronizarPlanIntegral(${i},'COP')"/></div></div>
+      <div class="grid2"><div><label>Total 5 adultos · ¥ JPY</label><input aria-label="Total en yenes: ${escapeHTML(x.concepto)}" id="integralValor_${i}" ${x._origenPresupuestoDia?'readonly title="Se actualiza desde Presupuesto del día"':''} type="number" min="0" step="any" inputmode="decimal" value="${Number(x.valor||0)}" oninput="sincronizarPlanIntegral(${i},'JPY')"/></div>
+      <div><label>Total 5 adultos · $ COP</label><input aria-label="Total en pesos: ${escapeHTML(x.concepto)}" id="integralCOP_${i}" ${x._origenPresupuestoDia?'readonly title="Se actualiza desde Presupuesto del día"':''} type="number" min="0" step="any" inputmode="decimal" value="${Math.round(copPlan*100)/100}" oninput="sincronizarPlanIntegral(${i},'COP')"/></div></div>
       <label>Tasa para este rubro (COP por ¥1) · ${escapeHTML(x.fecha)}</label>
-      <input id="integralTasa_${i}" type="number" min="0.000001" step="any" inputmode="decimal" value="${rate}" oninput="sincronizarPlanIntegral(${i},'TASA')"/>
+      <input id="integralTasa_${i}" ${x._origenPresupuestoDia?'readonly title="Se actualiza desde Presupuesto del día"':''} type="number" min="0.000001" step="any" inputmode="decimal" value="${rate}" oninput="sincronizarPlanIntegral(${i},'TASA')"/>
+      ${x._origenPresupuestoDia?'<span class="small">Sincronizado automáticamente con Presupuesto del día. Para cambiar el valor o la TRM, edita esa partida allí.</span>':''}
       <span class="small">Escribe en cualquiera de las dos monedas. La otra se actualiza automáticamente. Guarda para conservar el valor y la tasa.</span>
     </div>`;
   }).join('');
@@ -1423,6 +1442,7 @@ function guardarCostosIntegrales(silencioso=false){
       return false;
     }
     const moneda=document.getElementById('integralFila_'+i).dataset.moneda==='COP'?'COP':'JPY';
+    if(partidaDiariaCorrespondiente(plan[i])){next.push(plan[i]);continue;}
     next.push({...plan[i],valor,valorCOPPlan:pesos,monedaPlan:moneda,
       importeOriginalPlan:moneda==='COP'?pesos:valor,tasaPlanCOPJPY:rate});
   }
@@ -1446,6 +1466,7 @@ function cargarPresupuestoIntegral5(){
     setPresupuestoLista(x.fecha,lista);
   });
   plan.forEach(x=>{
+    if(partidaDiariaCorrespondiente(x))return; // presupuesto diario es la fuente principal
     let lista=getPresupuestoLista(x.fecha);
     const idx=lista.findIndex(r=>r.categoria===x.categoria && r.subcategoria===x.subcategoria);
     if(Number(x.valor)>0){
@@ -1598,7 +1619,7 @@ function renderFinanzasNuevas(arr){
   document.getElementById('cashUSD').textContent='US$'+cash.USD.toLocaleString('es-CO',{maximumFractionDigits:2});
   document.getElementById('cashCOP').textContent=cop(cash.COP);
   document.getElementById('listaCambios').innerHTML=cambios.map(x=>`<div class="row"><span>${escapeHTML(x.fecha)} · ${escapeHTML(x.origen)} · ${escapeHTML(cards.find(t=>t.id===x.cuenta)?.nombre||x.cuenta)}<br><span class="small">${fmtImporte(x.importe,x.moneda)} → ${yen(x.jpy)} · ${Number(x.tasaEfectivaCOPJPY).toFixed(4)} COP/¥</span></span><button class="btn red" onclick="eliminarCambio('${escapeHTML(x.id)}')">X</button></div>`).join('')||'<p class="mut">Aún no hay cambios ni retiros.</p>';
-  const plan=planIntegralActual();
+  const plan=planIntegralParaMostrar();
   const planTotal=plan.reduce((s,x)=>s+Number(x.valor||0),0);
   const pagadoPlan=i=>arr.filter(x=>String(x.planId??'')===String(i)).reduce((s,x)=>s+Number(x.valorYen||0),0);
   const pagadoTotal=plan.reduce((s,_,i)=>s+pagadoPlan(i),0);
@@ -1768,3 +1789,5 @@ try{
  });
 }catch(e){cloudMessage('Firebase no está disponible: '+e.message);}
 </script>
+</body>
+</html>
