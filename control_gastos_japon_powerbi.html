@@ -761,6 +761,7 @@ function eliminarPresupuestoRubro(i){
   lista.splice(i,1);
   setPresupuestoLista(fecha,lista);
   cargarPresupuestoFecha();
+  mostrarCostosIntegrales();
   render();
 }
 
@@ -1423,7 +1424,26 @@ function planIntegralParaMostrar(){
       monedaPlan:'JPY',importeOriginalPlan:Number(r.valor||0),
       valorCOPPlan:presupuestoPartidaCOP(r,x.fecha),_origenPresupuestoDia:true};
   });
-  return principales.concat(filasTransporteReservas());
+  // Incorporar las partidas nuevas del presupuesto diario (p. ej. Compras),
+  // sin alterar los índices de reservas ya vinculadas a gastos.
+  const transportes=filasTransporteReservas();
+  const adicionales=[];
+  fechasConPresupuesto().forEach(fecha=>{
+    const lista=getPresupuestoLista(fecha);
+    lista.forEach((r,indice)=>{
+      if(r.categoria==='Transporte' && r.subcategoria==='General' &&
+         transportes.some(t=>t.fecha===fecha))return;
+      if(principales.some(x=>x.fecha===fecha && x.categoria===r.categoria &&
+         x.subcategoria===r.subcategoria))return;
+      const tasa=tasaPartidaPresupuesto(r,fecha);
+      adicionales.push({fecha,categoria:r.categoria,subcategoria:r.subcategoria,
+        concepto:r.subcategoria && r.subcategoria!=='General' ? r.categoria+' — '+r.subcategoria : r.categoria+' — '+fecha,
+        nota:'Añadido en Presupuesto del día',valor:Number(r.valor||0),
+        tasaPlanCOPJPY:tasa,valorCOPPlan:presupuestoPartidaCOP(r,fecha),
+        _origenPresupuestoDia:true,_partidaAdicional:true,_indiceDiario:indice,estadoPago:'Pendiente'});
+    });
+  });
+  return principales.concat(transportes,adicionales);
 }
 // Planning rows keep the original currency and exchange rate, without changing
 // the historical yen-based dashboard or overwriting existing planned amounts.
@@ -1702,7 +1722,7 @@ function renderFinanzasNuevas(arr){
     const planCOP=importePlanCOP(x),pagadoCOP=pagadoCOPPlan(i),faltaCOP=Math.max(0,planCOP-pagadoCOP);
     const estado=x.estadoPago||'Pendiente';
     return `<div class="budgetbox"><b>${escapeHTML(x.concepto)}</b><br><span class="small">Planeado ${yen(x.valor)} / ${cop(planCOP)} COP · Pagado registrado ${yen(pagado)} / ${cop(pagadoCOP)} COP · Pendiente estimado ${yen(falta)} / ${cop(faltaCOP)} COP ${Number(x.valor)<=0?'· Falta cotizar':''}</span>
-    ${x._transporteReserva?'<span class="small">Estado: según gastos vinculados; no se crea un pago automáticamente.</span>':`<select class="compact" onchange="cambiarEstadoPlan(${i},this.value)">${['Pendiente','Parcial','Pagado'].map(v=>`<option value="${v}" ${v===estado?'selected':''}>${v}</option>`).join('')}</select>`}
+    ${(x._transporteReserva||x._partidaAdicional)?'<span class="small">Estado: según gastos registrados; no se crea un pago automáticamente.</span>':`<select class="compact" onchange="cambiarEstadoPlan(${i},this.value)">${['Pendiente','Parcial','Pagado'].map(v=>`<option value="${v}" ${v===estado?'selected':''}>${v}</option>`).join('')}</select>`}
     ${x._transporteReserva?`<button class="btn alt" onclick="editarTransporteReserva('${x.fecha}')">Editar transporte y TRM</button>`:''}
     ${estado==='Pagado'&&pagado===0?'<span class="small over">Marcado pagado, pero falta registrar/vincular el gasto.</span>':''}</div>`;
   }).join('');
