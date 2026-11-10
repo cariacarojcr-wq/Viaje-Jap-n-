@@ -160,9 +160,9 @@ html{scroll-padding-top:14px;scroll-behavior:smooth}
 <h2>💰 Presupuesto del día</h2>
 <label>Fecha del presupuesto</label>
 <input id="fechaPresupuestoDia" type="date" onchange="seleccionarFechaPresupuestoDia()"/>
-<label for="tasaPresupuestoDia">Tasa de cambio del día — COP por ¥1</label>
-<input id="tasaPresupuestoDia" type="text" inputmode="decimal" placeholder="Ej: 30,50" onchange="actualizarTasaDesdePresupuestoDia()"/>
-<span class="small">Es la misma tasa de Configuración para la fecha seleccionada. Al cambiarla aquí, se guarda para ese día y se recalculan los equivalentes en COP.</span>
+<label for="tasaPresupuestoDia">TRM de esta partida — COP por ¥1</label>
+<input id="tasaPresupuestoDia" type="text" inputmode="decimal" placeholder="Ej: 30,50" onchange="actualizarEquivalentePresupuestoCOP()"/>
+<span class="small">Esta TRM se guarda solo al pulsar «Agregar / actualizar rubro». No modifica las otras partidas del día. Las partidas antiguas sin TRM propia conservan la tasa histórica disponible para esa fecha.</span>
 <div class="grid2">
 <div>
 <label>Rubro / Categoría</label>
@@ -684,19 +684,36 @@ function seleccionarFechaPresupuestoDia(){
   document.getElementById('fecha').dispatchEvent(new Event('change'));
 }
 
-function actualizarTasaDesdePresupuestoDia(){
-  const campo=document.getElementById('tasaPresupuestoDia');
-  const valor=parseNumeroFlexible(campo.value);
-  if(!Number.isFinite(valor)||valor<=0)return;
-  const config=document.getElementById('trm');
-  config.value=String(valor);
-  config.dispatchEvent(new Event('input',{bubbles:true}));
+function tasaPartidaPresupuesto(r,fecha){
+  const individual=Number(r?.tasaCOPJPY);
+  return Number.isFinite(individual)&&individual>0?individual:tasaDia(fecha);
+}
+function presupuestoPartidaCOP(r,fecha){
+  return Number(r.valor||0)*tasaPartidaPresupuesto(r,fecha);
+}
+function totalPresupuestoFechaCOP(fecha){
+  return getPresupuestoLista(fecha).reduce((s,r)=>s+presupuestoPartidaCOP(r,fecha),0);
+}
+function totalPresupuestoViajeCOP(){
+  return fechasConPresupuesto().reduce((s,f)=>s+totalPresupuestoFechaCOP(f),0);
+}
+function seleccionarPartidaPresupuesto(i){
+  const r=getPresupuestoLista(fechaActual())[i];
+  if(!r)return;
+  document.getElementById('presupuestoCategoria').value=r.categoria;
+  actualizarSubcategoriaPresupuesto();
+  const sub=document.getElementById('presupuestoSubcategoria');
+  if(![...sub.options].some(o=>o.value===r.subcategoria))sub.add(new Option(r.subcategoria,r.subcategoria));
+  sub.value=r.subcategoria;
+  document.getElementById('presupuestoValor').value=r.valor;
+  document.getElementById('tasaPresupuestoDia').value=String(tasaPartidaPresupuesto(r,fechaActual()));
+  actualizarEquivalentePresupuestoCOP();
 }
 
 function actualizarEquivalentePresupuestoCOP(){
   const valor=Number(document.getElementById("presupuestoValor").value||0);
   const destino=document.getElementById("presupuestoValorCOP");
-  if(destino)destino.value=valor>0?cop(valor*tasaDia(fechaActual())):"";
+  if(destino)destino.value=valor>0?cop(valor*parseNumeroFlexible(document.getElementById("tasaPresupuestoDia").value)):"";
 }
 function cargarPresupuestoFecha(){
   const tasaPresupuesto=document.getElementById('tasaPresupuestoDia');
@@ -706,9 +723,9 @@ function cargarPresupuestoFecha(){
   const lista=getPresupuestoLista(fechaActual());
   const total=lista.reduce((s,x)=>s+Number(x.valor||0),0);
   document.getElementById("presupuestoTotalDia").value=total||"";
-  document.getElementById("presupuestoTotalDiaCOP").value=total?Math.round(total*getTRM()):"";
+  document.getElementById("presupuestoTotalDiaCOP").value=total?Math.round(totalPresupuestoFechaCOP(fechaActual())):"";
   document.getElementById("presupuestoDetalleDia").innerHTML=lista.length
-    ?lista.map((x,i)=>`<div class="row"><div><b>${x.categoria}</b><br><span class="small">${x.subcategoria}</span></div><div><b>${yen(x.valor)}</b><br><span class="small">${cop(Number(x.valor||0)*tasaDia(fechaActual()))} COP</span><br><button class="btn red" onclick="eliminarPresupuestoRubro(${i})">Eliminar</button></div></div>`).join("")
+    ?lista.map((x,i)=>`<div class="row"><div><b>${x.categoria}</b><br><span class="small">${x.subcategoria}</span></div><div><b>${yen(x.valor)}</b><br><span class="small">${cop(presupuestoPartidaCOP(x,fechaActual()))} COP · TRM ${tasaPartidaPresupuesto(x,fechaActual()).toLocaleString('es-CO',{maximumFractionDigits:6})}</span><br><button class="btn alt" onclick="seleccionarPartidaPresupuesto(${i})">Editar</button><button class="btn red" onclick="eliminarPresupuestoRubro(${i})">Eliminar</button></div></div>`).join("")
     :"<p class='mut'>Aún no has cargado presupuesto para este día.</p>";
 }
 
@@ -723,8 +740,10 @@ function agregarPresupuestoRubro(){
 
   let lista=getPresupuestoLista(fecha);
   const idx=lista.findIndex(x=>x.categoria===categoria && x.subcategoria===subcategoria);
-  if(idx>=0) lista[idx].valor=valor;
-  else lista.push({categoria,subcategoria,valor});
+  const tasa=parseNumeroFlexible(document.getElementById('tasaPresupuestoDia').value);
+  if(!Number.isFinite(tasa)||tasa<=0){alert('Ingresa una TRM válida mayor que cero para esta partida.');return;}
+  if(idx>=0) lista[idx]={...lista[idx],valor,tasaCOPJPY:tasa};
+  else lista.push({categoria,subcategoria,valor,tasaCOPJPY:tasa});
 
   setPresupuestoLista(fecha,lista);
   secureStore.removeItem(presupuestoKeyDetalleAnterior(fecha));
@@ -818,12 +837,12 @@ function renderDetalleFinanciacion(){
   const disponibles=registros.filter(x=>x.estado==='Disponible').reduce((s,x)=>s+Number(x.valorCOP||0),0);
   const previstos=registros.filter(x=>x.estado==='Previsto').reduce((s,x)=>s+Number(x.valorCOP||0),0);
   const fechas=fechasConPresupuesto().sort();
-  // Usar los mismos rubros y la misma tasa del indicador principal, sin duplicar subtotales.
+  // Usar las TRM individuales de cada partida, sin duplicar subtotales.
   const presupuestos=fechas.map(fecha=>{
     const rubros=getPresupuestoLista(fecha);
     const tasa=tasaDia(fecha);
     const jpy=rubros.reduce((s,r)=>s+Number(r.valor||0),0);
-    return {fecha,rubros,tasa,jpy,cop:jpy*tasa};
+    return {fecha,rubros,tasa,jpy,cop:rubros.reduce((s,r)=>s+presupuestoPartidaCOP(r,fecha),0)};
   });
   const total=presupuestos.reduce((s,x)=>s+x.cop,0);
   const totalJPY=presupuestos.reduce((s,x)=>s+x.jpy,0);
@@ -832,7 +851,7 @@ function renderDetalleFinanciacion(){
     if(!x.rubros.length)return [];
     const detalle=x.rubros.map(r=>{
       const valor=Number(r.valor||0);
-      return `<tr><td>${escapeHTML(x.fecha)}</td><td>${escapeHTML(r.categoria||'Sin categoría')}</td><td>${escapeHTML(r.subcategoria||'Sin subcategoría')}</td><td>${yen(valor)}</td><td>${cop(x.tasa)} / ¥</td><td>${cop(valor*x.tasa)}</td></tr>`;
+      return `<tr><td>${escapeHTML(x.fecha)}</td><td>${escapeHTML(r.categoria||'Sin categoría')}</td><td>${escapeHTML(r.subcategoria||'Sin subcategoría')}</td><td>${yen(valor)}</td><td>${cop(tasaPartidaPresupuesto(r,x.fecha))} / ¥</td><td>${cop(presupuestoPartidaCOP(r,x.fecha))}</td></tr>`;
     });
     detalle.push(`<tr class="detalle-subtotal"><td><b>${escapeHTML(x.fecha)}</b></td><td colspan="2"><b>Subtotal del día (no sumar dos veces)</b></td><td><b>${yen(x.jpy)}</b></td><td></td><td><b>${cop(x.cop)}</b></td></tr>`);
     return detalle;
@@ -848,8 +867,8 @@ function renderDetalleFinanciacion(){
     ${filas?`<div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Rubro</th><th>Subcategoría</th><th>Presupuesto ¥</th><th>Tasa COP/¥</th><th>Presupuesto COP</th></tr></thead><tbody>${filas}<tr class="detalle-subtotal"><td colspan="3"><b>TOTAL GENERAL DEL PRESUPUESTO (suma de días)</b></td><td><b>${yen(totalJPY)}</b></td><td>—</td><td><b>${cop(total)}</b></td></tr></tbody></table></div>`:'<p class="small">No hay presupuestos diarios guardados; por eso no hay importes que sumar. Revisa las fechas en Presupuesto del día.</p>'}
     <h3>Conciliación</h3>
     <div class="row"><span>Total del detalle por fechas</span><b>${cop(total)}</b></div>
-    <div class="row"><span>Total presupuesto del resumen</span><b>${cop(fechasConPresupuesto().reduce((s,f)=>s+totalPresupuestoFecha(f)*tasaDia(f),0))}</b></div>
-    <div class="row"><b>Diferencia</b><b>${cop(total-fechasConPresupuesto().reduce((s,f)=>s+totalPresupuestoFecha(f)*tasaDia(f),0))}</b></div>
+    <div class="row"><span>Total presupuesto del resumen</span><b>${cop(totalPresupuestoViajeCOP())}</b></div>
+    <div class="row"><b>Diferencia</b><b>${cop(total-totalPresupuestoViajeCOP())}</b></div>
     <h3>¿Qué está pagado y qué sigue pendiente?</h3>
     <p class="small">La tabla siguiente muestra los gastos registrados y los cruza por fecha, rubro y subcategoría con el presupuesto. La coincidencia es orientativa: no se descuenta automáticamente para evitar duplicar pagos o asignar un gasto al concepto equivocado.</p>
     ${detalleEstadoPagosPresupuesto()}
@@ -875,7 +894,7 @@ function detalleEstadoPagosPresupuesto(){
   const filas=presupuestos.map(r=>{
     const k=grupo(r.fecha,r.categoria,r.subcategoria);claves.add(k);
     const pagos=acumulados.get(k)||[];
-    const previsto=Number(r.valor||0)*tasaDia(r.fecha);
+    const previsto=presupuestoPartidaCOP(r,r.fecha);
     const pagado=pagos.reduce((s,g)=>s+Number(g.valorCOP||0),0);
     sumaPres+=previsto;sumaAsociada+=pagado;
     const pendiente=Math.max(0,previsto-pagado);
@@ -897,7 +916,7 @@ function detalleEstadoPagosPresupuesto(){
     : '';
   const sinCoincidencia=gs.filter(g=>!claves.has(grupo(g.fecha,g.categoria,g.subcategoria)));
   const sinCoincidenciaCOP=sinCoincidencia.reduce((s,g)=>s+Number(g.valorCOP||0),0);
-  return `<div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Rubro</th><th>Subcategoría</th><th>Presupuestado COP</th><th>Gasto registrado coincidente COP</th><th>Saldo estimado COP</th><th>Concepto pagado</th></tr></thead><tbody>${filas||'<tr><td colspan="7">Sin presupuestos diarios</td></tr>'}<tr class="detalle-subtotal"><td colspan="3"><b>TOTAL</b></td><td><b>${cop(sumaPres)}</b></td><td><b>${cop(sumaAsociada)}</b></td><td><b>${cop(presupuestos.reduce((s,r)=>{const k=grupo(r.fecha,r.categoria,r.subcategoria);const p=(acumulados.get(k)||[]).reduce((a,g)=>a+Number(g.valorCOP||0),0);return s+Math.max(0,Number(r.valor||0)*tasaDia(r.fecha)-p);},0))}</b></td><td>Coincidencia por fecha y clasificación</td></tr></tbody></table></div>
+  return `<div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Rubro</th><th>Subcategoría</th><th>Presupuestado COP</th><th>Gasto registrado coincidente COP</th><th>Saldo estimado COP</th><th>Concepto pagado</th></tr></thead><tbody>${filas||'<tr><td colspan="7">Sin presupuestos diarios</td></tr>'}<tr class="detalle-subtotal"><td colspan="3"><b>TOTAL</b></td><td><b>${cop(sumaPres)}</b></td><td><b>${cop(sumaAsociada)}</b></td><td><b>${cop(presupuestos.reduce((s,r)=>{const k=grupo(r.fecha,r.categoria,r.subcategoria);const p=(acumulados.get(k)||[]).reduce((a,g)=>a+Number(g.valorCOP||0),0);return s+Math.max(0,presupuestoPartidaCOP(r,r.fecha)-p);},0))}</b></td><td>Coincidencia por fecha y clasificación</td></tr></tbody></table></div>
   ${auditoriaTours}
   <p class="small">Gastos registrados sin coincidencia exacta con un rubro presupuestado: <b>${cop(sinCoincidenciaCOP)}</b> (${sinCoincidencia.length} registros). Pueden corresponder a pagos anticipados, fechas diferentes o conceptos sin presupuestar. No se descuentan automáticamente.</p>
   ${sinCoincidencia.length?`<details><summary>Ver gastos sin coincidencia (${sinCoincidencia.length})</summary><div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Rubro</th><th>Concepto</th><th>Valor COP</th></tr></thead><tbody>${sinCoincidencia.map(g=>`<tr><td>${escapeHTML(g.fecha||'')}</td><td>${escapeHTML(g.categoria||'')} / ${escapeHTML(g.subcategoria||'')}</td><td>${escapeHTML(g.concepto||'')}</td><td>${cop(Number(g.valorCOP||0))}</td></tr>`).join('')}</tbody></table></div></details>`:''}`;
@@ -943,7 +962,7 @@ function renderIngresos(arrGastos){
   document.getElementById('gastosFinanciadosCOP').textContent=cop(gastosCOP);
   document.getElementById('saldoFondosCOP').textContent=cop(disponibles-gastosCOP);
   document.getElementById('saldoFondosCOP').className=disponibles-gastosCOP<0?'over':'under';
-  const presupuestoCOP=fechasConPresupuesto().reduce((s,f)=>s+totalPresupuestoFecha(f)*tasaDia(f),0);
+  const presupuestoCOP=totalPresupuestoViajeCOP();
   const cobertura=disponibles+previstos-presupuestoCOP;
   document.getElementById('faltanteFinanciacion').textContent=cop(Math.max(0,-cobertura));
   if(document.getElementById('detalleFinanciacion').style.display!=='none')renderDetalleFinanciacion();
@@ -1106,14 +1125,14 @@ function renderComparativoDia(arr,fecha){
       const gsub=gastoSubcategoriaFecha(arr,fecha,cat,sub);
       const ssub=psub-gsub;
       const gsubCOP=arr.filter(x=>x.fecha===fecha&&x.categoria===cat&&x.subcategoria===sub).reduce((s,x)=>s+Number(x.valorCOP||0),0);
-      return `<div class="row"><div class="small">↳ ${sub}<br>Ppto ${yen(psub)} · Real ${yen(gsub)}<br>Ppto ${cop(psub*tasaPresupuesto)} · Real ${cop(gsubCOP)}</div><b class="${psub===0?'neutral':(ssub<0?'over':'under')}">${yen(ssub)}</b></div>`;
+      return `<div class="row"><div class="small">↳ ${sub}<br>Ppto ${yen(psub)} · Real ${yen(gsub)}<br>Ppto ${cop(lista.filter(x=>x.categoria===cat&&x.subcategoria===sub).reduce((s,r)=>s+presupuestoPartidaCOP(r,fecha),0))} · Real ${cop(gsubCOP)}</div><b class="${psub===0?'neutral':(ssub<0?'over':'under')}">${yen(ssub)}</b></div>`;
     }).join("");
 
-    return `<div class="budgetbox"><div class="row"><div><b>${cat}</b><br><span class="small">Presupuesto ${yen(presup)} · Gasto real ${yen(gasto)}<br>Presupuesto ${cop(presup*tasaPresupuesto)} · Gasto real ${cop(gastoCOP)}</span></div><b class="${presup===0?'neutral':(saldo<0?'over':'under')}">${yen(saldo)}</b></div>${detalleSubs}</div>`;
+    return `<div class="budgetbox"><div class="row"><div><b>${cat}</b><br><span class="small">Presupuesto ${yen(presup)} · Gasto real ${yen(gasto)}<br>Presupuesto ${cop(lista.filter(x=>x.categoria===cat).reduce((s,r)=>s+presupuestoPartidaCOP(r,fecha),0))} · Gasto real ${cop(gastoCOP)}</span></div><b class="${presup===0?'neutral':(saldo<0?'over':'under')}">${yen(saldo)}</b></div>${detalleSubs}</div>`;
   }).join("");
 
   const saldoTotal=totalP-gastoTotal;
-  html+=`<div class="budgetbox"><div class="row"><div><b>TOTAL DÍA</b><br><span class="small">Presupuesto ${yen(totalP)} · Gasto real ${yen(gastoTotal)}<br>Presupuesto ${cop(totalP*tasaPresupuesto)} · Gasto real ${cop(gastoTotalCOP)}</span></div><b class="${totalP===0?'neutral':(saldoTotal<0?'over':'under')}">${yen(saldoTotal)}</b></div></div>`;
+  html+=`<div class="budgetbox"><div class="row"><div><b>TOTAL DÍA</b><br><span class="small">Presupuesto ${yen(totalP)} · Gasto real ${yen(gastoTotal)}<br>Presupuesto ${cop(totalPresupuestoFechaCOP(fecha))} · Gasto real ${cop(gastoTotalCOP)}</span></div><b class="${totalP===0?'neutral':(saldoTotal<0?'over':'under')}">${yen(saldoTotal)}</b></div></div>`;
 
   document.getElementById("comparativoDia").innerHTML=html;
 }
@@ -1134,10 +1153,10 @@ function renderResumenDias(arr){
       const gasto=gastoCategoriaFecha(arr,fecha,cat);
       const saldo=presup-gasto;
       const gastoCOP=arr.filter(x=>x.fecha===fecha&&x.categoria===cat).reduce((s,x)=>s+Number(x.valorCOP||0),0);
-      return `<div class="row"><div>${cat}<br><span class="small">Ppto ${yen(presup)} · Real ${yen(gasto)}<br>Ppto ${cop(presup*tasaPresupuesto)} · Real ${cop(gastoCOP)}</span></div><b class="${presup===0?'neutral':(saldo<0?'over':'under')}">${yen(saldo)}</b></div>`;
+      return `<div class="row"><div>${cat}<br><span class="small">Ppto ${yen(presup)} · Real ${yen(gasto)}<br>Ppto ${cop(lista.filter(x=>x.categoria===cat).reduce((s,r)=>s+presupuestoPartidaCOP(r,fecha),0))} · Real ${cop(gastoCOP)}</span></div><b class="${presup===0?'neutral':(saldo<0?'over':'under')}">${yen(saldo)}</b></div>`;
     }).join("");
 
-    return `<div class="budgetbox"><div class="row"><div><b>${fecha}</b><br><span class="small">TOTAL — Ppto ${yen(totalP)} · Real ${yen(gastoTotal)}<br>Ppto ${cop(totalP*tasaPresupuesto)} · Real ${cop(gastoTotalCOP)}</span></div><b class="${totalP===0?'neutral':(saldoTotal<0?'over':'under')}">${yen(saldoTotal)}</b></div>${detalle}</div>`;
+    return `<div class="budgetbox"><div class="row"><div><b>${fecha}</b><br><span class="small">TOTAL — Ppto ${yen(totalP)} · Real ${yen(gastoTotal)}<br>Ppto ${cop(totalPresupuestoFechaCOP(fecha))} · Real ${cop(gastoTotalCOP)}</span></div><b class="${totalP===0?'neutral':(saldoTotal<0?'over':'under')}">${yen(saldoTotal)}</b></div>${detalle}</div>`;
   }).join("");
 }
 
@@ -1155,7 +1174,7 @@ function render(){
   const pct=presupuestoViaje>0?(total/presupuestoViaje)*100:0;
 
   document.getElementById("presupuestoViajeYen").textContent=yen(presupuestoViaje);
-  document.getElementById("presupuestoViajeCOP").textContent=cop(fechasConPresupuesto().reduce((s,f)=>s+totalPresupuestoFecha(f)*tasaDia(f),0));
+  document.getElementById("presupuestoViajeCOP").textContent=cop(totalPresupuestoViajeCOP());
   document.getElementById("totalYen").textContent=yen(total);
   document.getElementById("totalCOP").textContent=cop(arr.reduce((s,x)=>s+Number(x.valorCOP||0),0));
   document.getElementById("saldoViajeYen").textContent=yen(saldoViaje);
@@ -1430,8 +1449,8 @@ function cargarPresupuestoIntegral5(){
     let lista=getPresupuestoLista(x.fecha);
     const idx=lista.findIndex(r=>r.categoria===x.categoria && r.subcategoria===x.subcategoria);
     if(Number(x.valor)>0){
-      if(idx>=0){if(lista[idx].origenPlanIntegral)lista[idx].valor=Number(x.valor);} 
-      else lista.push({categoria:x.categoria,subcategoria:x.subcategoria,valor:Number(x.valor)});
+      if(idx>=0){if(lista[idx].origenPlanIntegral){lista[idx].valor=Number(x.valor);lista[idx].tasaCOPJPY=Number(x.tasaPlanCOPJPY)>0?Number(x.tasaPlanCOPJPY):tasaDia(x.fecha);}} 
+      else lista.push({categoria:x.categoria,subcategoria:x.subcategoria,valor:Number(x.valor),tasaCOPJPY:Number(x.tasaPlanCOPJPY)>0?Number(x.tasaPlanCOPJPY):tasaDia(x.fecha)});
     } else if(idx>=0 && lista[idx].origenPlanIntegral){
       lista.splice(idx,1);
     }
@@ -1749,5 +1768,3 @@ try{
  });
 }catch(e){cloudMessage('Firebase no está disponible: '+e.message);}
 </script>
-</body>
-</html>
