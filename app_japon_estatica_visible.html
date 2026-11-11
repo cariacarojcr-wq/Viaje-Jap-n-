@@ -402,6 +402,16 @@ nav a{text-decoration:none;color:white;background:#2a3041;border:1px solid #3036
    <div class="calc-grid"><label>TRM de referencia (COP por USD)<input id="calcTrmRef" type="text" inputmode="decimal" placeholder="Ej. 3300"></label><label>Mercado (JPY por USD)<input id="calcUsdJpyRef" type="text" inputmode="decimal" placeholder="Ej. 155"></label></div>
    <div id="calcEvaluacion" class="calc-note" aria-live="polite">Introduce ambas referencias y tu tasa ofrecida para comparar.</div>
   </div>
+  <div style="padding:12px;border:1px solid #59647c;border-radius:11px;margin:12px 0;background:#172435">
+   <b>Conversión rápida — sin agregar artículos</b>
+   <p class="calc-note">Escribe un valor y consulta su equivalente inmediatamente. Para pesos ↔ yenes usa COP por yen; para dólares ↔ yenes usa JPY por dólar. También puedes usar la referencia calculada con TRM y USD/JPY.</p>
+   <div class="calc-grid">
+    <label>Valor que tengo / precio de compra<input id="calcRapidoValor" type="text" inputmode="decimal" value="100" placeholder="Ej. 100 o 1000"></label>
+    <label>Moneda de origen<select id="calcRapidoMoneda"><option value="USD">USD — dólares</option><option value="JPY">JPY — yenes</option><option value="COP">COP — pesos</option></select></label>
+   </div>
+   <div id="calcRapidoResultado" class="calc-results" aria-live="polite">Escribe la tasa de cambio para convertir.</div>
+   <button type="button" onclick="calcUsarReferencia()" style="margin-top:8px">Usar tasa de referencia TRM ÷ USD/JPY</button>
+  </div>
   <div class="calc-grid">
    <label>1 yen = COP<input id="calcCopYen" type="text" inputmode="decimal" value="" placeholder="Ej. 30,50"></label>
    <label>1 dólar = JPY<input id="calcYenUsd" type="text" inputmode="decimal" value="" placeholder="Ej. 150,25"></label>
@@ -465,7 +475,21 @@ const RECOMENDACIONES_TRANSPORTE = {"2026-12-15": ["🔵 Suica + Klook", "Mañan
   if(ofrecidaYenUsd>0){const margen=(ofrecidaYenUsd/mercado-1)*100;mensajes.push('Tu tasa USD→JPY: '+(margen>=0?'+':'')+margen.toFixed(2)+'% en yenes recibidos frente a referencia. '+(margen < -3?'Recibes sensiblemente menos yenes.':margen < -1?'Recibes algo menos yenes.':margen<=1?'Cercana a la referencia.':'Recibes más yenes.'));}
   mensajes.push('Comparación orientativa: incluye cualquier comisión fija o porcentual antes de decidir.');out.textContent=mensajes.join(' ');
  }
- function calcular(){evaluarTasa();const base={JPY:0,COP:0,USD:0};let valido=true;for(const m of movimientos){const c=convertir(m.valor*m.signo,m.moneda);if(!c){valido=false;break;}for(const k of Object.keys(base))base[k]+=c[k];}
+ function rapido(){
+  const v=num(el('calcRapidoValor').value), origen=el('calcRapidoMoneda').value;
+  const cy=rates().cy || (num(el('calcTrmRef').value)>0&&num(el('calcUsdJpyRef').value)>0?num(el('calcTrmRef').value)/num(el('calcUsdJpyRef').value):0);
+  const yu=rates().yu || num(el('calcUsdJpyRef').value);
+  const out=el('calcRapidoResultado');
+  if(!(v>=0&&Number.isFinite(v))){out.textContent='Introduce un importe válido.';return;}
+  if((origen==='USD'&&!(yu>0))||(origen==='COP'&&!(cy>0))||(origen==='JPY'&&!(cy>0||yu>0))){out.textContent='Introduce la tasa correspondiente o las referencias TRM y USD/JPY.';return;}
+  let jpy=origen==='JPY'?v:origen==='USD'?v*yu:v/cy;
+  let parts=[`<b>${fmt(jpy,'JPY')}</b>`];
+  if(cy>0)parts.push(fmt(jpy*cy,'COP'));
+  if(yu>0)parts.push(fmt(jpy/yu,'USD'));
+  out.innerHTML='<b>Equivalencias:</b><div style="font-size:20px;margin-top:5px">'+parts.join(' · ')+'</div>';
+ }
+ window.calcUsarReferencia=function(){const trm=num(el('calcTrmRef').value),yu=num(el('calcUsdJpyRef').value);if(!(trm>0&&yu>0)){alert('Introduce primero la TRM COP/USD y la referencia USD/JPY.');return;}el('calcCopYen').value=(trm/yu).toFixed(5);el('calcYenUsd').value=String(yu);calcular();};
+ function calcular(){rapido();evaluarTasa();const base={JPY:0,COP:0,USD:0};let valido=true;for(const m of movimientos){const c=convertir(m.valor*m.signo,m.moneda);if(!c){valido=false;break;}for(const k of Object.keys(base))base[k]+=c[k];}
  const p=num(el('calcComision').value);const signo=Number(el('calcSigno').value);const pct=Number.isFinite(p)&&p>=0?p:0;const factor=1+signo*pct/100;
  el('calcMovimientos').textContent=movimientos.length?movimientos.map((m,i)=>`${i+1}. ${m.signo===1?'+':'−'} ${fmt(m.valor,m.moneda)}`).join('  |  '):'Sin artículos todavía.';
  if(!valido||!(rates().cy>0&&rates().yu>0)){el('calcResultado').textContent='Ingresa tasas válidas mayores que cero (COP por yen y yenes por dólar).';return;}
@@ -480,6 +504,7 @@ const RECOMENDACIONES_TRANSPORTE = {"2026-12-15": ["🔵 Suica + Klook", "Mañan
    const hoy=fechaJapon();let ultima='';try{ultima=localStorage.getItem('itinerario_calc_fecha')||''}catch(e){}
    el('calcFechaTasa').textContent=ultima===hoy?'Tasas registradas para hoy en Japón ('+hoy+'). Puedes editarlas.':'Fecha actual en Japón: '+hoy+'. '+(ultima?'Última tasa guardada: '+ultima+'. Verifica y actualiza las tasas de hoy.':'Introduce la tasa de hoy; no se consulta automáticamente en internet.');
  }
+ for(const id of ['calcRapidoValor','calcRapidoMoneda']){el(id).addEventListener('input',calcular);el(id).addEventListener('change',calcular);}
  for(const id of ids){el(id).addEventListener('input',calcular);el(id).addEventListener('change',()=>{if(['calcCopYen','calcYenUsd','calcTrmRef','calcUsdJpyRef'].includes(id)){try{localStorage.setItem('itinerario_calc_'+id,el(id).value);localStorage.setItem('itinerario_calc_fecha',fechaJapon())}catch(e){}actualizarFechaTasa()}calcular()});}
  for(const id of ['calcCopYen','calcYenUsd','calcTrmRef','calcUsdJpyRef'])try{el(id).value=localStorage.getItem('itinerario_calc_'+id)||''}catch(e){}
  el('calcOverlay').addEventListener('click',e=>{if(e.target===el('calcOverlay'))cerrarCalculadora()});
