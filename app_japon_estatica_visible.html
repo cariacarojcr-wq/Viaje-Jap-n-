@@ -23,6 +23,19 @@ nav a{text-decoration:none;color:white;background:#2a3041;border:1px solid #3036
 .transport-grid{display:grid;grid-template-columns:1fr;gap:7px;margin-top:8px}
 .transport-item{background:#222838;border-radius:10px;padding:9px 10px;font-size:14px}
 .transport-note{color:#b6bfd1;font-size:13px;margin-top:8px}
+
+/* Calculadora de compras: aislada del itinerario y de los gastos */
+#calcOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;overflow-y:auto;padding:12px;box-sizing:border-box}
+#calcOverlay.show{display:block}
+#calcPanel{max-width:560px;margin:12px auto 50px;background:#1b2230;border:1px solid #59647c;border-radius:16px;padding:16px;color:#fff;box-sizing:border-box}
+#calcPanel label{display:block;margin-top:10px;font-size:13px;color:#d5e0f3}
+#calcPanel input,#calcPanel select{box-sizing:border-box;width:100%;padding:11px;border-radius:9px;background:#101723;color:#fff;border:1px solid #56637a;font-size:16px}
+#calcPanel .calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#calcPanel .calc-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#calcPanel button{background:#345780;color:white;border:0;border-radius:10px;padding:11px 14px;font-size:15px;cursor:pointer}
+#calcPanel button.calc-danger{background:#8c3546}
+#calcPanel .calc-results{margin-top:14px;padding:12px;background:#101923;border-radius:10px;line-height:1.8}
+#calcPanel .calc-note{font-size:12px;color:#c1cbd9;margin-top:10px}
 </style>
 </head>
 <body>
@@ -376,10 +389,41 @@ nav a{text-decoration:none;color:white;background:#2a3041;border:1px solid #3036
 <div class="row"><div class="time">Aeropuerto</div><div><div class="act">Cena ligera en Haneda si hace falta</div><div class="note">Solo después de check-in y controles.<div style="margin-top:8px;padding:8px 10px;border-left:3px solid #d7a6b5;background:rgba(160,140,160,.07);border-radius:5px;font-size:.94em;line-height:1.5"><div><b>Tipo de comida: </b>Bento, onigiri, sándwiches o ramen ligero tras trámites del aeropuerto.</div><div><b>Costo orientativo: </b>Estimado ¥800–¥2.000 por persona; 5: ¥4.000–¥10.000.</div><div><b>Horario: </b>Depende de la terminal y de la hora de paso por seguridad.</div><div><b>Reserva: </b>No reservar.</div></div></div></div></div>
 <a class="btn" href="https://www.google.com/maps/search/?api=1&amp;query=restaurants%20Haneda%20Airport%20Terminal%203%20Tokyo" rel="noopener" target="_blank">✈️ Restaurantes Haneda T3</a>
 </section>
+
+<div id="calcOverlay" role="dialog" aria-modal="true" aria-label="Calculadora de compras">
+ <div id="calcPanel">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 style="margin:0;font-size:21px">🧮 Calculadora de compras</h2><button type="button" onclick="cerrarCalculadora()">✕ Cerrar</button></div>
+  <p style="font-size:13px;color:#cbd5e5">JPY ↔ COP y USD ↔ JPY. Suma o resta artículos y calcula comisión sin registrar gastos.</p>
+  <p id="calcFechaTasa" class="calc-note" aria-live="polite"></p>
+  <div style="padding:11px;border:1px solid #59647c;border-radius:11px;margin:12px 0;background:#172435">
+   <b>Referencia del día (consulta y digita)</b>
+   <p class="calc-note">La TRM colombiana es COP por USD, NO COP por yen. Para evaluar una tasa de cambio a yenes también necesitas USD/JPY de mercado. Las referencias no se actualizan solas: consulta los enlaces y escribe las cifras vigentes.</p>
+   <div style="display:flex;flex-wrap:wrap;gap:6px"><a class="btn" href="https://www.banrep.gov.co/es/glosario/tasa-cambio-trm" target="_blank" rel="noopener">TRM oficial COP/USD</a><a class="btn" href="https://www.google.com/finance/quote/USD-JPY" target="_blank" rel="noopener">Referencia USD/JPY</a></div>
+   <div class="calc-grid"><label>TRM de referencia (COP por USD)<input id="calcTrmRef" type="text" inputmode="decimal" placeholder="Ej. 3300"></label><label>Mercado (JPY por USD)<input id="calcUsdJpyRef" type="text" inputmode="decimal" placeholder="Ej. 155"></label></div>
+   <div id="calcEvaluacion" class="calc-note" aria-live="polite">Introduce ambas referencias y tu tasa ofrecida para comparar.</div>
+  </div>
+  <div class="calc-grid">
+   <label>1 yen = COP<input id="calcCopYen" type="text" inputmode="decimal" value="" placeholder="Ej. 30,50"></label>
+   <label>1 dólar = JPY<input id="calcYenUsd" type="text" inputmode="decimal" value="" placeholder="Ej. 150,25"></label>
+  </div>
+  <div class="calc-grid">
+   <label>Moneda de los artículos<select id="calcMoneda"><option value="JPY">JPY — yenes</option><option value="COP">COP — pesos</option><option value="USD">USD — dólares</option></select></label>
+   <label>Importe del artículo<input id="calcImporte" type="text" inputmode="decimal" placeholder="Ej. 2500"></label>
+  </div>
+  <div class="calc-actions"><button type="button" onclick="calcAgregar(1)">+ Sumar artículo</button><button type="button" onclick="calcAgregar(-1)">− Restar / descuento</button><button type="button" class="calc-danger" onclick="calcLimpiar()">Limpiar cuenta</button></div>
+  <div id="calcMovimientos" style="margin-top:10px;font-size:13px"></div>
+  <div class="calc-grid">
+   <label>Comisión (%)<input id="calcComision" type="text" inputmode="decimal" value="0"></label>
+   <label>Aplicar comisión<select id="calcSigno"><option value="1">+ Sumar</option><option value="-1">− Restar</option></select></label>
+  </div>
+  <div class="calc-results" id="calcResultado" aria-live="polite">Introduce las tasas y agrega un artículo.</div>
+  <p class="calc-note">La fecha corresponde a Japón. Los umbrales de comparación son orientativos, no una garantía de mejor precio. Las tasas se introducen manualmente; no son cotizaciones en tiempo real y pueden cambiar según el banco y la fecha. La comisión porcentual se aplica al subtotal. Los cálculos no modifican el presupuesto ni los gastos. Se guardan únicamente las tasas en este navegador.</p>
+ </div>
+</div>
 <div class="fixed">
 <a class="btn ok" href="https://www.google.com/maps/search/?api=1&amp;query=3%20Chome-26-12%20Sumida%2C%20Sumida%20City%2C%20Tokyo%20131-0031%2C%20Jap%C3%B3n" rel="noopener" target="_blank">Tokyo</a>
 <a class="btn ok" href="https://www.google.com/maps/search/?api=1&amp;query=53-1%20Nich%C5%8Dme%2C%20Kyoto%2C%20Kyoto%20605-0001%2C%20Jap%C3%B3n" rel="noopener" target="_blank">Kyoto</a>
-<a class="btn warn" href="#asistente">Asistente</a>
+<button class="btn warn" type="button" onclick="abrirCalculadora()">🧮 Calculadora</button><a class="btn warn" href="#asistente">Asistente</a>
 <a class="btn" href="https://www.google.com/maps" rel="noopener" target="_blank">Maps</a>
 <a class="btn ok" href="control_gastos_japon_powerbi.html" target="_self">💴 Gastos</a></div>
 <script>
@@ -401,5 +445,46 @@ const RECOMENDACIONES_TRANSPORTE = {"2026-12-15": ["🔵 Suica + Klook", "Mañan
     }
   } catch(e) {}
 })();
-</script></body>
+</script>
+<script>
+(function(){
+ const ids=['calcCopYen','calcYenUsd','calcComision','calcSigno','calcMoneda','calcTrmRef','calcUsdJpyRef'];
+ let movimientos=[];
+ const el=id=>document.getElementById(id);
+ const num=v=>{let x=String(v||'').trim().replace(/\s/g,'');if(x.includes(',')&&x.includes('.'))x=x.lastIndexOf(',')>x.lastIndexOf('.')?x.replace(/\./g,'').replace(',','.'):x.replace(/,/g,'');else x=x.replace(',','.');return Number(x)};
+ const fmt=(v,c)=>new Intl.NumberFormat('es-CO',{style:'currency',currency:c,maximumFractionDigits:c==='JPY'||c==='COP'?0:2}).format(v);
+ const rates=()=>({cy:num(el('calcCopYen').value),yu:num(el('calcYenUsd').value)});
+ function convertir(v,origen){const {cy,yu}=rates();if(!(cy>0&&yu>0))return null;const jpy=origen==='JPY'?v:origen==='COP'?v/cy:v*yu;return {JPY:jpy,COP:jpy*cy,USD:jpy/yu};}
+ function evaluarTasa(){
+  const trm=num(el('calcTrmRef').value), mercado=num(el('calcUsdJpyRef').value), ofrecidaCopYen=num(el('calcCopYen').value), ofrecidaYenUsd=num(el('calcYenUsd').value);
+  const out=el('calcEvaluacion');
+  if(!(trm>0&&mercado>0)){out.textContent='Consulta y digita TRM COP/USD y USD/JPY del mismo momento para comparar. No hay datos automáticos.';return;}
+  const ref=trm/mercado;
+  let mensajes=['Referencia cruzada: 1 JPY ≈ '+ref.toLocaleString('es-CO',{maximumFractionDigits:3})+' COP (TRM ÷ USD/JPY).'];
+  if(ofrecidaCopYen>0){const margen=(ofrecidaCopYen/ref-1)*100;mensajes.push('Tu tasa COP/JPY: '+(margen>=0?'+':'')+margen.toFixed(2)+'% frente a referencia. '+(margen>3?'Pagas sensiblemente más por yen.':margen>1?'Pagas algo más por yen.':margen>=-1?'Cercana a la referencia.':'Pagas menos por yen.'));}
+  if(ofrecidaYenUsd>0){const margen=(ofrecidaYenUsd/mercado-1)*100;mensajes.push('Tu tasa USD→JPY: '+(margen>=0?'+':'')+margen.toFixed(2)+'% en yenes recibidos frente a referencia. '+(margen < -3?'Recibes sensiblemente menos yenes.':margen < -1?'Recibes algo menos yenes.':margen<=1?'Cercana a la referencia.':'Recibes más yenes.'));}
+  mensajes.push('Comparación orientativa: incluye cualquier comisión fija o porcentual antes de decidir.');out.textContent=mensajes.join(' ');
+ }
+ function calcular(){evaluarTasa();const base={JPY:0,COP:0,USD:0};let valido=true;for(const m of movimientos){const c=convertir(m.valor*m.signo,m.moneda);if(!c){valido=false;break;}for(const k of Object.keys(base))base[k]+=c[k];}
+ const p=num(el('calcComision').value);const signo=Number(el('calcSigno').value);const pct=Number.isFinite(p)&&p>=0?p:0;const factor=1+signo*pct/100;
+ el('calcMovimientos').textContent=movimientos.length?movimientos.map((m,i)=>`${i+1}. ${m.signo===1?'+':'−'} ${fmt(m.valor,m.moneda)}`).join('  |  '):'Sin artículos todavía.';
+ if(!valido||!(rates().cy>0&&rates().yu>0)){el('calcResultado').textContent='Ingresa tasas válidas mayores que cero (COP por yen y yenes por dólar).';return;}
+ el('calcResultado').innerHTML=`Subtotal: ${fmt(base.JPY,'JPY')} · ${fmt(base.COP,'COP')} · ${fmt(base.USD,'USD')}<hr style="border-color:#39465a"><b>Total con comisión (${signo===1?'+':'−'}${pct}%):</b><div style="font-size:20px"><b>${fmt(base.JPY*factor,'JPY')}</b></div><div>${fmt(base.COP*factor,'COP')}</div><div>${fmt(base.USD*factor,'USD')}</div>`;
+ }
+ window.abrirCalculadora=function(){actualizarFechaTasa();el('calcOverlay').classList.add('show');calcular();};
+ window.cerrarCalculadora=function(){el('calcOverlay').classList.remove('show');};
+ window.calcAgregar=function(signo){const v=num(el('calcImporte').value);if(!Number.isFinite(v)||v<=0){alert('Introduce un importe positivo válido.');return;}movimientos.push({valor:v,signo,moneda:el('calcMoneda').value});el('calcImporte').value='';calcular();};
+ window.calcLimpiar=function(){movimientos=[];calcular();};
+ function fechaJapon(){return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}
+ function actualizarFechaTasa(){
+   const hoy=fechaJapon();let ultima='';try{ultima=localStorage.getItem('itinerario_calc_fecha')||''}catch(e){}
+   el('calcFechaTasa').textContent=ultima===hoy?'Tasas registradas para hoy en Japón ('+hoy+'). Puedes editarlas.':'Fecha actual en Japón: '+hoy+'. '+(ultima?'Última tasa guardada: '+ultima+'. Verifica y actualiza las tasas de hoy.':'Introduce la tasa de hoy; no se consulta automáticamente en internet.');
+ }
+ for(const id of ids){el(id).addEventListener('input',calcular);el(id).addEventListener('change',()=>{if(['calcCopYen','calcYenUsd','calcTrmRef','calcUsdJpyRef'].includes(id)){try{localStorage.setItem('itinerario_calc_'+id,el(id).value);localStorage.setItem('itinerario_calc_fecha',fechaJapon())}catch(e){}actualizarFechaTasa()}calcular()});}
+ for(const id of ['calcCopYen','calcYenUsd','calcTrmRef','calcUsdJpyRef'])try{el(id).value=localStorage.getItem('itinerario_calc_'+id)||''}catch(e){}
+ el('calcOverlay').addEventListener('click',e=>{if(e.target===el('calcOverlay'))cerrarCalculadora()});
+ actualizarFechaTasa();calcular();
+})();
+</script>
+</body>
 </html>
